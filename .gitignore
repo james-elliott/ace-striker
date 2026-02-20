@@ -4,3 +4,6 @@ lib/firebase/config.js
 node_modules/
 .env
 .firebaserc
+firestore-debug.log
+firebase-debug.log
+database-debug.log

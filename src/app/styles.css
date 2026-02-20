@@ -394,7 +394,8 @@ a {
   }
 }
 
-#review {
+#review,
+input {
   padding: 20px;
   font-size: 17px;
   border: none;

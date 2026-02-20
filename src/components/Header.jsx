@@ -1,13 +1,13 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   signInWithGoogle,
   signOut,
   onIdTokenChanged,
 } from "@/src/lib/firebase/auth.js";
-import { addFakeRestaurantsAndReviews } from "@/src/lib/firebase/firestore.js";
 import { setCookie, deleteCookie } from "cookies-next";
+import { getUserSnapshotById } from "@/src/lib/firebase/firestore.js";
 
 function useUserSession(initialUser) {
   useEffect(() => {
@@ -44,9 +44,9 @@ export default function Header({ initialUser }) {
   return (
     <header>
       <Link href="/" className="logo">
-        <img src="/friendly-eats.svg" alt="FriendlyEats" />
-        Friendly Eats
-      </Link>
+        <img src="/friendly-eats.svg" alt="Ace Striker" />
+        Ace Striker
+      </Link> 
       {user ? (
         <>
           <div className="profile">
@@ -63,12 +63,6 @@ export default function Header({ initialUser }) {
               ...
               <ul>
                 <li>{user.displayName}</li>
-
-                <li>
-                  <a href="#" onClick={addFakeRestaurantsAndReviews}>
-                    Add sample restaurants
-                  </a>
-                </li>
 
                 <li>
                   <a href="#" onClick={handleSignOut}>

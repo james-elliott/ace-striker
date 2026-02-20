@@ -32,16 +32,6 @@ export default function Restaurant({
     setReview({ ...review, [name]: value });
   };
 
-  async function handleRestaurantImage(target) {
-    const image = target.files ? target.files[0] : null;
-    if (!image) {
-      return;
-    }
-
-    const imageURL = await updateRestaurantImage(id, image);
-    setRestaurantDetails({ ...restaurantDetails, photo: imageURL });
-  }
-
   const handleClose = () => {
     setIsOpen(false);
     setReview({ rating: 0, text: "" });
@@ -58,7 +48,6 @@ export default function Restaurant({
       <RestaurantDetails
         restaurant={restaurantDetails}
         userId={userId}
-        handleRestaurantImage={handleRestaurantImage}
         setIsOpen={setIsOpen}
         isOpen={isOpen}
       >

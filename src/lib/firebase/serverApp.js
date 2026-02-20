@@ -6,6 +6,17 @@ import { cookies } from "next/headers";
 import { initializeServerApp, initializeApp } from "firebase/app";
 
 import { getAuth } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCa4oxyx0fVATJEz8E0JpX0IFIBjXMYFKg",
+  authDomain: "james-battletech-tools.firebaseapp.com",
+  projectId: "james-battletech-tools",
+  storageBucket: "james-battletech-tools.firebasestorage.app",
+  messagingSenderId: "532949047230",
+  appId: "1:532949047230:web:17bb1c65dac2e0b3d9cbef"
+};
 
 // Returns an authenticated client SDK instance for use in Server Side Rendering
 // and Static Site Generation
@@ -17,7 +28,7 @@ export async function getAuthenticatedAppForUser() {
   // other affordances for use in server environments.
   const firebaseServerApp = initializeServerApp(
     // https://github.com/firebase/firebase-js-sdk/issues/8863#issuecomment-2751401913
-    initializeApp(),
+    initializeApp(firebaseConfig),
     {
       authIdToken,
     }
@@ -25,6 +36,11 @@ export async function getAuthenticatedAppForUser() {
 
   const auth = getAuth(firebaseServerApp);
   await auth.authStateReady();
+
+  if (process.env.NODE_ENV === 'development') {
+    connectFirestoreEmulator(getFirestore(firebaseServerApp), '127.0.0.1', 8080);
+    connectStorageEmulator(getStorage(firebaseServerApp), '127.0.0.1', 9199);
+  }
 
   return { firebaseServerApp, currentUser: auth.currentUser };
 }

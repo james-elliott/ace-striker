@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { auth } from "@/src/lib/firebase/clientApp.js";
 import { useRouter } from "next/navigation";
+import { getUserSnapshotById } from "./firebase/firestore";
 
 export function useUser() {
   const [user, setUser] = useState();

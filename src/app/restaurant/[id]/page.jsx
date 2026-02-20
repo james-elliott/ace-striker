@@ -8,10 +8,6 @@ import {
 import ReviewsList, {
   ReviewsListSkeleton,
 } from "@/src/components/Reviews/ReviewsList";
-import {
-  GeminiSummary,
-  GeminiSummarySkeleton,
-} from "@/src/components/Reviews/ReviewSummary";
 import { getFirestore } from "firebase/firestore";
 
 export default async function Home(props) {
@@ -19,8 +15,7 @@ export default async function Home(props) {
   // parameters via Next.js and download the data
   // we need for this page
   const params = await props.params;
-  const { currentUser } = await getUser();
-  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
   const restaurant = await getRestaurantById(
     getFirestore(firebaseServerApp),
     params.id
@@ -31,11 +26,8 @@ export default async function Home(props) {
       <Restaurant
         id={params.id}
         initialRestaurant={restaurant}
-        initialUserId={currentUser?.uid || ""}
+        initialUserId={currentUser.uid || ""}
       >
-        <Suspense fallback={<GeminiSummarySkeleton />}>
-          <GeminiSummary restaurantId={params.id} />
-        </Suspense>
       </Restaurant>
       <Suspense
         fallback={<ReviewsListSkeleton numReviews={restaurant.numRatings} />}

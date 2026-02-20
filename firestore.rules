@@ -10,11 +10,28 @@ service cloud.firestore {
   }
 
   match /databases/{database}/documents {
+    function allowedUser() {
+      return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
     // Restaurants:
     //   - Authenticated user can read
     //   - Authenticated user can create/update (for demo purposes only)
     //   - Updates are allowed if no fields are added and name is unchanged
     //   - Deletes are not allowed (default)
+    match /users/{uId} {
+      allow read;
+    }
+    match /campaigns/{campaign} {
+      allow read;
+      allow create: if allowedUser();
+      allow update: if allowedUser();
+      match /users/{userId} {
+        allow create: if allowedUser();
+      }
+    }
+    match /pilots/{pilotId} {
+      allow read;
+    }
     match /restaurants/{restaurantId} {
       allow read;
       allow create: if request.auth != null;

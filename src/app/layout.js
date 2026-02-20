@@ -6,9 +6,9 @@ import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "FriendlyEats",
+  title: "Ace Striker",
   description:
-    "FriendlyEats is a restaurant review website built with Next.js and Firebase.",
+    "A BattleTech Aces companion for tracking campaigns.",
 };
 
 export default async function RootLayout({ children }) {
@@ -18,7 +18,7 @@ export default async function RootLayout({ children }) {
       <body>
         <Header initialUser={currentUser?.toJSON()} />
 
-        <main>{children}</main>
+        {children}
       </body>
     </html>
   );
