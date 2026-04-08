@@ -22,7 +22,7 @@ service cloud.firestore {
       allow read;
     }
     match /campaigns/{campaign} {
-      allow read;
+      allow read: if allowedUser();
       allow create: if allowedUser();
       allow update: if allowedUser();
       match /users/{userId} {

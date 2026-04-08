@@ -3,7 +3,7 @@
 // import { addReviewToRestaurant } from "@/src/lib/firebase/firestore.js";
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore, setDoc } from "firebase/firestore";
-import { doc, collection, runTransaction, Timestamp, addDoc, query, getDocs, where } from "firebase/firestore";
+import { doc, collection, runTransaction, Timestamp, addDoc, query, getDocs, where, getDoc } from "firebase/firestore";
 
 // This is a Server Action
 // https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions
@@ -33,7 +33,7 @@ export async function handleCampaignDialogSubmission(data) {
   }
 }
 
-export async function getCampaigns(db = db, filters = {}, userId) {
+export async function getCampaigns(db = db, userId) {
   if (userId == null) {
     console.log('Error: No user id');
     return;
@@ -50,4 +50,18 @@ export async function getCampaigns(db = db, filters = {}, userId) {
       //timestamp: doc.data().timestamp.toDate(),
     };
   });
+}
+
+export async function getCampaignById(db, campaignId, userId) {
+  if (!campaignId) {
+    console.log("Error: Invalid Campaign ID received: ", campaignId);
+    return;
+  }
+
+  const docRef = doc(db, "campaigns", campaignId);
+  const docSnap = await getDoc(docRef);
+  return {
+    ...docSnap.data(),
+    // timestamp: docSnap.data().timestamp.toDate(),
+  };
 }

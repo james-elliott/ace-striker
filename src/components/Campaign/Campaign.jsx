@@ -25,7 +25,7 @@ import { db, auth } from "@/src/lib/firebase/clientApp";
 import { useUser } from "@/src/lib/getUser";
 import CampaignDialog from "./CampaignDialog";
 
-export function CampaignList({initialCampaigns, searchParams, initialUser}) {
+export function CampaignList({initialCampaigns, initialUser}) {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -52,22 +52,9 @@ export function CampaignList({initialCampaigns, searchParams, initialUser}) {
     });
   };
 
-  // The initial filters are the search params from the URL, useful for when the user refreshes the page
-  const initialFilters = searchParams ? {
-    // When adding Campaign filters, put the initialization here.
-    // city: searchParams.city || "",
-    // category: searchParams.category || "",
-    // price: searchParams.price || "",
-    // sort: searchParams.sort || "",
-  } : {};
-
   const [filters, setFilters] = useState({});
 
   const [campaigns, setCampaigns] = useState(initialCampaigns);
-
-  useEffect(() => {
-    routerWithFilters(router, filters);
-  }, [router, filters]);
 
   useEffect(() => {
     return getCampaignsSnapshot((data) => {
@@ -77,25 +64,24 @@ export function CampaignList({initialCampaigns, searchParams, initialUser}) {
 
   return (
     <article>
-      <h1>Hello World, I'm a campaign listing.
-        <div className="actions">
-          {userId && (
-            <img
-              alt="review"
-              className="review"
-              onClick={() => {
-                setIsOpen(!isOpen);
-              }}
-              src="/review.svg"
-            />
-          )}
-        </div>
-      </h1>
+      <h1>Hello World, I'm a campaign listing.</h1>
       <ul className="campaigns">
         {campaigns?.map ? campaigns.map((campaign) => (
-          <p key={campaign.id}>{campaign.name}</p>
+          <li key={campaign.id}>
+            <Link href={`/campaign/${campaign.id}`}>
+              {campaign.name}
+            </Link>
+          </li>
         )) : "Loading Campaigns..." }
       </ul>
+      <hr />
+      <a 
+        href="#"
+        onClick={() => {
+          setIsOpen(!isOpen);
+        }}>
+        New Campaign
+      </a>
       {userId && (
         <Suspense fallback={<p>Loading...</p>}>
           <CampaignDialog
@@ -109,19 +95,6 @@ export function CampaignList({initialCampaigns, searchParams, initialUser}) {
       )}
     </article>
   );
-}
-
-function routerWithFilters(router, filters) {
-  const queryParams = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (value !== undefined && value !== "") {
-      queryParams.append(key, value);
-    }
-  }
-
-  const queryString = queryParams.toString();
-  router.push(`?${queryString}`);
 }
 
 export function getCampaignsSnapshot(cb, filters = {}, uid) {
@@ -149,5 +122,50 @@ export function getCampaignsSnapshot(cb, filters = {}, uid) {
     });
 
     cb(results);
+  });
+}
+
+export function Campaign({
+  id,
+  initialCampaign,
+  initialUserId,
+  children,
+}) {
+  const [campaign, setCampaign] = useState(initialCampaign);
+
+
+  useEffect(() => {
+    return getCampaignSnapshotById(id, (data) => {
+      setCampaign(data);
+    });
+  }, [id]);
+
+  return (
+    <>
+      <p>This is the campaign: {campaign.name}</p>
+      <p>difficulty: {campaign.difficulty}</p>
+      <p>startingBV: {campaign.startingBV}</p>
+      <p>startingSP: {campaign.startingSP}</p>
+    </>
+  );
+}
+
+export function getCampaignSnapshotById(campaignId, cb) {
+  if (!campaignId) {
+    console.log("Error: Invalid Campaign ID received: ", campaignId);
+    return;
+  }
+
+  if (typeof cb !== "function") {
+    console.log("Error: The callback parameter is not a function");
+    return;
+  }
+
+  const docRef = doc(db, "campaigns", campaignId);
+  return onSnapshot(docRef, (docSnap) => {
+    cb({
+      ...docSnap.data(),
+      // timestamp: docSnap.data().timestamp.toDate(),
+    });
   });
 }

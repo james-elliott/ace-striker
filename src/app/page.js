@@ -24,8 +24,7 @@ export default async function Home(props) {
   );
   const campaigns = await getCampaigns(
     getFirestore(firebaseServerApp),
-    searchParams,
-    currentUser.uid
+    currentUser?.uid
   );
   return (
     <main className="main__home">
@@ -34,11 +33,12 @@ export default async function Home(props) {
       Show them a list of campaigns, if none, show placeholder. @todo take them to the last accessed one automatically.
       
       */}
+      { currentUser ? (
       <CampaignList 
         initialCampaigns={campaigns}
         initialUser={currentUser.toJSON()}
-        searchParams={searchParams}
-      />
+      /> ) : null
+      }
       {/* <RestaurantListings
         initialRestaurants={restaurants}
         searchParams={searchParams}

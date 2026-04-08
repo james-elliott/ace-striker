@@ -39,7 +39,7 @@ const CampaignDialog = ({
         }}
       >
         <header>
-          <h3>Add your review</h3>
+          <h3>New Campaign</h3>
         </header>
         <article>
 
