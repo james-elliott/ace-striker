@@ -13,7 +13,7 @@ export const metadata = {
     "A BattleTech Aces companion for tracking campaigns.",
 };
 
-export default async function RootLayout({ children }) {
+export default async function RootLayout({ children, modals }) {
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
 
   const campaigns = await getCampaigns(
@@ -30,6 +30,7 @@ export default async function RootLayout({ children }) {
         <Header initialUser={currentUser?.toJSON()} campaigns={campaigns} />
 
         {children}
+        {modals}
       </body>
     </html>
   );

@@ -22,49 +22,22 @@ import {
   getFirestore,
 } from "firebase/firestore";
 import { db, auth } from "@/src/lib/firebase/clientApp";
-import { useUser } from "@/src/lib/getUser";
-import CampaignDialog from "./CampaignDialog";
+import { handleCampaignDialogSubmission } from "./actions.js";
 
 export function CampaignList({initialCampaigns, initialUser}) {
-  const router = useRouter();
-
-  const [isOpen, setIsOpen] = useState(false);
   
   const userId = initialUser.uid;
-  const [campaign, setCampaign] = useState({
-    name: "",
-    startingBV: 400,
-    difficulty: 1.0,
-    startingSP: 400,
-  });
-
-  const onChange = (value, name) => {
-    setCampaign({ ...campaign, [name]: value });
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-    setCampaign({
-      name: "",
-      startingBV: 400,
-      difficulty: 1.0,
-      startingSP: 400,
-    });
-  };
-
-  const [filters, setFilters] = useState({});
 
   const [campaigns, setCampaigns] = useState(initialCampaigns);
 
   useEffect(() => {
     return getCampaignsSnapshot((data) => {
       setCampaigns(data);
-    }, filters, userId);
-  }, [filters]);
+    }, userId);
+  },);
 
   return (
-    <article>
-      <h1>Hello World, I'm a campaign listing.</h1>
+    <>
       <ul className="campaigns">
         {campaigns?.map ? campaigns.map((campaign) => (
           <li key={campaign.id}>
@@ -75,29 +48,15 @@ export function CampaignList({initialCampaigns, initialUser}) {
         )) : "Loading Campaigns..." }
       </ul>
       <hr />
-      <a 
-        href="#"
-        onClick={() => {
-          setIsOpen(!isOpen);
-        }}>
+      <Link 
+        href="/addCampaign">
         New Campaign
-      </a>
-      {userId && (
-        <Suspense fallback={<p>Loading...</p>}>
-          <CampaignDialog
-            isOpen={isOpen}
-            handleClose={handleClose}
-            campaign={campaign}
-            onChange={onChange}
-            userId={userId}
-          />
-        </Suspense>
-      )}
-    </article>
+      </Link>
+    </>
   );
 }
 
-export function getCampaignsSnapshot(cb, filters = {}, uid) {
+export function getCampaignsSnapshot(cb, uid) {
   if (typeof cb !== "function") {
     console.log("Error: The callback parameter is not a function");
     return;
@@ -168,4 +127,78 @@ export function getCampaignSnapshotById(campaignId, cb) {
       // timestamp: docSnap.data().timestamp.toDate(),
     });
   });
+}
+
+export function AddCampaign( user ) {
+
+  const router = useRouter();
+
+  const handleClose = (e) => {
+    if (e.type == 'click') {
+      router.back();
+    }
+  };
+
+  return <form
+          action={handleCampaignDialogSubmission}
+        >
+            <h1>New Campaign</h1>
+  
+            <p>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                placeholder="Name this campaign"
+                required
+              />
+            </p>
+  
+            <p>
+              <input
+                type="text"
+                name="startingBV"
+                id="startingBV"
+                placeholder="Set a maximum BV to start the campaign"
+                required
+              />
+            </p>
+            <p>
+              <input
+                type="text"
+                name="startingSP"
+                id="startingSP"
+                placeholder="Set the initial Supply Points you will have"
+                required
+              />
+            </p>
+            <p>
+              <select id="difficulty"
+                defaultValue={1.0}
+                name="difficulty"
+                >
+                <option value={1.2}>Rookie</option>
+                <option value={1.0}>Standard</option>
+                <option value={0.9}>Veteran</option>
+                <option value={0.8}>Elite</option>
+                <option value={0.7}>Legendary</option>
+              </select>
+            </p>
+  
+            <input type="hidden" name="userId" value={user.userId} />
+            <menu>
+              <button
+                autoFocus
+                type="reset"
+                onClick={(e) => handleClose(e)}
+                className="button--cancel"
+              >
+                Cancel
+              </button>
+              <button type="submit" value="confirm" className="button--confirm">
+                Submit
+              </button>
+            </menu>
+        </form>;
+
 }

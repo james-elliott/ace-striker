@@ -125,13 +125,10 @@ footer {
   }
 }
 
-article {
+main.home {
   margin: 0 auto;
   background-color: rgb(229 234 240);
   padding: 20px 40px;
-}
-
-article {
   width: 75%;
 }
 

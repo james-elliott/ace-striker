@@ -27,7 +27,7 @@ export default async function Home(props) {
     currentUser?.uid
   );
   return (
-    <main className="main__home">
+    <main className="home">
       {/* if the user is in the allowed list, let them see stuff, otherwise have them sign up. If signed up, show them they are waiting.
       
       Show them a list of campaigns, if none, show placeholder. @todo take them to the last accessed one automatically.

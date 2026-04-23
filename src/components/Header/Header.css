@@ -147,6 +147,9 @@ header {
 
 /* header specific menu styling */
 .menu {
+    button {
+        color: #4f4f49; 
+    }
     &:last-child [popovertarget] {
         clip-path: shape(
             from 0 0,
@@ -164,7 +167,7 @@ header {
     width: 2.75rem;
     border: none;
     background: none;
-    cursor: pointer;
+    cursor: default;
     clip-path: shape(
         from 0 0,
         hline to 100%,
@@ -174,8 +177,9 @@ header {
         close
     );
     
-    &:hover {
+    &:not([disabled]):hover {
         background: rgba(255,255,255,.2);
+        cursor: pointer;
     }
     &:has(+ :popover-open) {
         background: #EDEDE8;

@@ -8,6 +8,7 @@ import {
 } from "@/src/lib/firebase/auth.js";
 import { setCookie, deleteCookie } from "cookies-next";
 import { getUserSnapshotById } from "@/src/lib/firebase/firestore.js";
+import { getCampaignsSnapshot } from "../Campaign/Campaign";
 import './Header.css';
 
 function useUserSession(initialUser) {
@@ -59,7 +60,7 @@ export default function Header({ initialUser, campaigns }) {
           )) : null }
           <hr />
           <li>
-            <a href="#">New Campaign</a>
+            <Link href="/addCampaign">New Campaign</Link>
           </li>
         </ul>
       </div>
