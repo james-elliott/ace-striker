@@ -22,7 +22,9 @@ import {
   getFirestore,
 } from "firebase/firestore";
 import { db, auth } from "@/src/lib/firebase/clientApp";
-import { handleCampaignDialogSubmission } from "./actions.js";
+import { addCampaign } from "./actions.js";
+import { useActionState } from "react";
+import { refresh } from "next/cache.js";
 
 export function CampaignList({initialCampaigns, initialUser}) {
   
@@ -39,13 +41,13 @@ export function CampaignList({initialCampaigns, initialUser}) {
   return (
     <>
       <ul className="campaigns">
-        {campaigns?.map ? campaigns.map((campaign) => (
+        {campaigns.length > 0 ? campaigns.map((campaign) => (
           <li key={campaign.id}>
             <Link href={`/campaign/${campaign.id}`}>
               {campaign.name}
             </Link>
           </li>
-        )) : "Loading Campaigns..." }
+        )) : <span>No campaigns</span> }
       </ul>
       <hr />
       <Link 
@@ -129,8 +131,8 @@ export function getCampaignSnapshotById(campaignId, cb) {
   });
 }
 
-export function AddCampaign( user ) {
-
+export function AddCampaignForm( initialState ) {
+  const [state, formAction, pending] = useActionState(addCampaign, initialState);
   const router = useRouter();
 
   const handleClose = (e) => {
@@ -140,7 +142,8 @@ export function AddCampaign( user ) {
   };
 
   return <form
-          action={handleCampaignDialogSubmission}
+          action={formAction}
+          onSubmit={(e) => handleClose(e)}
         >
             <h1>New Campaign</h1>
   
@@ -160,6 +163,7 @@ export function AddCampaign( user ) {
                 name="startingBV"
                 id="startingBV"
                 placeholder="Set a maximum BV to start the campaign"
+                defaultValue={400}
                 required
               />
             </p>
@@ -169,6 +173,7 @@ export function AddCampaign( user ) {
                 name="startingSP"
                 id="startingSP"
                 placeholder="Set the initial Supply Points you will have"
+                defaultValue={400}
                 required
               />
             </p>
@@ -185,17 +190,22 @@ export function AddCampaign( user ) {
               </select>
             </p>
   
-            <input type="hidden" name="userId" value={user.userId} />
+            <input type="hidden" name="userId" value={initialState.userId.user} />
             <menu>
               <button
                 autoFocus
                 type="reset"
                 onClick={(e) => handleClose(e)}
+                disabled={pending}
                 className="button--cancel"
               >
                 Cancel
               </button>
-              <button type="submit" value="confirm" className="button--confirm">
+              <button 
+                type="submit" 
+                value="confirm" 
+                disabled={pending}
+                className="button--confirm">
                 Submit
               </button>
             </menu>

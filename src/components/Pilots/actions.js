@@ -3,6 +3,7 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore, setDoc } from "firebase/firestore";
 import { doc, collection, runTransaction, Timestamp, addDoc, query, getDocs, where, getDoc } from "firebase/firestore";
+import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 

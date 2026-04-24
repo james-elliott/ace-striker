@@ -31,6 +31,11 @@ service cloud.firestore {
     }
     match /pilots/{pilotId} {
       allow read;
+      allow create: if allowedUser();
+      allow update: if allowedUser();
+      match /users/{userId} {
+        allow create: if allowedUser();
+      }
     }
     match /restaurants/{restaurantId} {
       allow read;

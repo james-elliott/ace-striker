@@ -1,14 +1,15 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { AddCampaign } from "@/src/components/Campaign/Campaign";
+import { AddCampaignForm } from "@/src/components/Campaign/Campaign";
 
 export default async function Page() {
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
 
   const userId = currentUser?.uid;
+  const initialState = { user: userId }
 
   return (
     <dialog open={true}>
-      <AddCampaign userId={userId} />
+      <AddCampaignForm userId={initialState} />
     </dialog>
   );
 }

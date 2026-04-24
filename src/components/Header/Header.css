@@ -127,7 +127,7 @@ header {
         display: block;
         padding: 4px 8px;
         transition: all 150ms;
-        &:hover {
+        &:not(span):hover {
             background: rgba(0,0,0,.08);
         }
     }
