@@ -1,14 +1,9 @@
-import { Suspense } from "react";
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore } from "firebase/firestore";
 import { getCampaignById } from "@/src/components/Campaign/actions";
 import { Campaign } from "@/src/components/Campaign/Campaign";
-import { redirect } from "next/dist/server/api-utils";
 
 export default async function Page(props) {
-  // This is a server component, we can access URL
-  // parameters via Next.js and download the data
-  // we need for this page
   const params = await props.params;
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
   const campaign = await getCampaignById(
@@ -19,6 +14,7 @@ export default async function Page(props) {
 
   return (
     <main>
+      {campaign.status == 'preparing' ? 'You need to start the campaign before you can create sorties' : 'This campaign is started'}
       <Campaign
         id={params.id}
         initialCampaign={campaign}

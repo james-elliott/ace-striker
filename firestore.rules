@@ -22,21 +22,19 @@ service cloud.firestore {
       allow read;
     }
     match /campaigns/{campaign} {
-      allow read: if true;
+      allow read: if allowedUser();
       allow create: if allowedUser();
       allow update: if allowedUser();
       match /users/{userId} {
         allow create: if allowedUser();
       }
-    }
-    match /pilots/{pilotId} {
-      allow read;
-      allow create: if allowedUser();
-      allow update: if allowedUser();
-      match /users/{userId} {
+      match /pilots/{pilotId} {
+        allow read: if allowedUser();
         allow create: if allowedUser();
+        allow update: if allowedUser();
       }
     }
+    
     match /restaurants/{restaurantId} {
       allow read;
       allow create: if request.auth != null;

@@ -4,7 +4,7 @@
 // It receives data from src/app/page.jsx, such as the initial campaigns and search params from the URL
 
 import Link from "next/link";
-import { React, useState, useEffect, Suspense } from "react";
+import { React, useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import {
   collection,
@@ -23,8 +23,6 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/src/lib/firebase/clientApp";
 import { addCampaign } from "./actions.js";
-import { useActionState } from "react";
-import { refresh } from "next/cache.js";
 
 export function CampaignList({initialCampaigns, initialUser}) {
   
@@ -36,7 +34,7 @@ export function CampaignList({initialCampaigns, initialUser}) {
     return getCampaignsSnapshot((data) => {
       setCampaigns(data);
     }, userId);
-  },);
+  },[]);
 
   return (
     <>

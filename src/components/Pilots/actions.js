@@ -3,47 +3,46 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore, setDoc } from "firebase/firestore";
 import { doc, collection, runTransaction, Timestamp, addDoc, query, getDocs, where, getDoc } from "firebase/firestore";
-import { routerServerGlobal } from "next/dist/server/lib/router-utils/router-server-context";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-export async function addCampaign(initiatalState, formData) {
+// Use the context injector to add the CampaignId instead of a hidden form field
+export async function addPilot(initiatalState, formData) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
-  const newCampaign = {
-    name: formData.get('name'),
-    users: [formData.get("userId")],
-    startingBV: Number(formData.get("startingBV")),
-    startingSP: Number(formData.get("startingSP")),
-    difficulty: Number(formData.get("difficulty")),
+  // Create the pilot object
+  const newPilot = {
+    name: 'My Name',
+    callsign: 'Callsign',
+    type: 'BM',
+    skill: Number(formData.get("skill")),
+    edgeTokens: Number(formData.get("edgeTokens")),
+    abilities: [],
+    state: 'ready',
+    mvp: 0,
   }
-  let docRef = {};
+
+  // Add abilities to the abilities array
+  
+
+  // Write to the pilot collection
   try {
-    docRef = await addDoc(
-      collection(db, "campaigns"),
-      newCampaign
-    );
-    
-    await setDoc(doc(db, "campaigns", docRef.id, "users", formData.get("userId")), {});
+    const docRef = collection(db, 'campaigns', initiatalState.campaignId, 'pilots');
+    await addDoc(docRef, newPilot);
 
   } catch (e) {
     console.log("There was an error adding the document");
     console.error("Error adding document: ", e);
   }
-  if (docRef && docRef.id) {
-    revalidatePath('/');
-    redirect('/campaign/' + docRef.id);
-  }
 }
 
-export async function getCampaigns(db = db, userId) {
-  if (userId == null) {
-    console.log('Error: No user id');
+export async function getPilots(db = db, campaignId) {
+  if (campaignId == null) {
+    console.log('Error: No campaign id');
     return;
   }
-  let q = query(collection(db, "campaigns"));//.where("owner", "==", userId));
-  q = query(q, where("users", "array-contains", userId));
+  let q = query(collection(db, "campaigns", campaignId, "pilots"));
 
   const results = await getDocs(q);
   return results.docs.map((doc) => {
@@ -54,18 +53,4 @@ export async function getCampaigns(db = db, userId) {
       //timestamp: doc.data().timestamp.toDate(),
     };
   });
-}
-
-export async function getCampaignById(db, campaignId, userId) {
-  if (!campaignId) {
-    console.log("Error: Invalid Campaign ID received: ", campaignId);
-    return;
-  }
-
-  const docRef = doc(db, "campaigns", campaignId);
-  const docSnap = await getDoc(docRef);
-  return {
-    ...docSnap.data(),
-    // timestamp: docSnap.data().timestamp.toDate(),
-  };
 }

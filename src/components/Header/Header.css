@@ -80,8 +80,6 @@ header {
 
 header {
 
-  & ul {
-  }
   & a {
     text-decoration: none;
     color: black;
@@ -104,9 +102,9 @@ header {
     anchor-name: --menu-anchor;
     cursor: pointer;
     transition: all 150ms;
-    &:has(+ :popover-open) {
-        /* Style when the popover is open */
-    }
+    /* &:has(+ :popover-open) {
+        Style when the popover is open 
+    } */
 }
 
 .menu [popover] {
@@ -184,7 +182,4 @@ header {
     &:has(+ :popover-open) {
         background: #EDEDE8;
     }
-}
-
-.menu [popover] {
 }

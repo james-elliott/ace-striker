@@ -1,144 +1,48 @@
 "use client";
 
-// This components shows one individual restaurant
-// It receives data from src/app/restaurant/[id]/page.jsx
-
-import { React, useState, useEffect, Suspense } from "react";
+import { React, useActionState, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { getRestaurantSnapshotById } from "@/src/lib/firebase/firestore.js";
-import { useUser } from "@/src/lib/getUser";
-import RestaurantDetails from "@/src/components/RestaurantDetails.jsx";
-import {
-  collection,
-  onSnapshot,
-  query,
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  orderBy,
-  Timestamp,
-  runTransaction,
-  where,
-  addDoc,
-  getFirestore,
-} from "firebase/firestore";
+import { addPilot } from "./actions";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/src/lib/firebase/clientApp";
+import { query } from "firebase/firestore";
+import Link from "next/link";
 
-export default function Restaurant({
-  id,
-  initialRestaurant,
-  initialUserId,
-  children,
-}) {
-  const [restaurantDetails, setRestaurantDetails] = useState(initialRestaurant);
-  const [editing, setEditing] = useState(false);
+// Pilot Listing
+export function PilotList({initialPilots, campaignId}) {
 
-  // The only reason this component needs to know the user ID is to associate a review with the user, and to know whether to show the review dialog
-  const userId = useUser()?.uid || initialUserId;
-  const [review, setReview] = useState({
-    rating: 0,
-    text: "",
-  });
-
-  const onChange = (value, name) => {
-    setReview({ ...review, [name]: value });
-  };
-
-  async function handleRestaurantImage(target) {
-    const image = target.files ? target.files[0] : null;
-    if (!image) {
-      return;
-    }
-
-    const imageURL = await updateRestaurantImage(id, image);
-    setRestaurantDetails({ ...restaurantDetails, photo: imageURL });
-  }
-
-  const handleClose = () => {
-    setIsOpen(false);
-    setReview({ rating: 0, text: "" });
-  };
+  const [pilots, setPilots] = useState(initialPilots);
 
   useEffect(() => {
-    return getRestaurantSnapshotById(id, (data) => {
-      setRestaurantDetails(data);
-    });
-  }, [id]);
+    return getPilotsSnapshot((data) => {
+      setPilots(data);
+    }, campaignId);
+  },[]);
 
   return (
     <>
-      <RestaurantDetails
-        restaurant={restaurantDetails}
-        userId={userId}
-        handleRestaurantImage={handleRestaurantImage}
-        setIsOpen={setIsOpen}
-        isOpen={isOpen}
-      >
-        {children}
-      </RestaurantDetails>
+      <ul className="pilots">
+          {pilots.length > 0 ? pilots.map((pilots) => (
+          <li key={pilots.id}>
+              {pilots.name}
+          </li>
+        )) : <span>No Pilots</span> }
+      </ul>
     </>
   );
 }
 
-export function PilotListing({
-  initialPilots,
-  searchParams,
-}) {
-  const router = useRouter();
-
-  // The initial filters are the search params from the URL, useful for when the user refreshes the page
-  // const initialFilters = {
-  //   city: searchParams.city || "",
-  //   category: searchParams.category || "",
-  //   price: searchParams.price || "",
-  //   sort: searchParams.sort || "",
-  // };
-  const initialFilters = {};
-
-  const [pilots, setPilots] = useState(initialPilots);
-  const [filters, setFilters] = useState(initialFilters);
-
-  useEffect(() => {
-    routerWithFilters(router, filters);
-  }, [router, filters]);
-
-  useEffect(() => {
-    return getPilots((data) => {
-      setPilots(data);
-    }, filters);
-  }, [filters]);
-
-  return (
-    <article>
-      <ul className="pilots">
-        These are pilots
-      </ul>
-    </article>
-  );
-}
-
-function routerWithFilters(router, filters) {
-  const queryParams = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (value !== undefined && value !== "") {
-      queryParams.append(key, value);
-    }
-  }
-
-  const queryString = queryParams.toString();
-  router.push(`?${queryString}`);
-}
-
-function getPilots(cb, filters = {}) {
+// Get Pilots
+export function getPilotsSnapshot(cb, campaignId) {
   if (typeof cb !== "function") {
     console.log("Error: The callback parameter is not a function");
     return;
   }
-
-  let q = query(collection(db, "pilots"));
+  if (campaignId == null) {
+    console.log('no campaign id');
+    return;
+  }
+  let q = query(collection(db, "campaigns", campaignId, 'pilots'));
 
   return onSnapshot(q, (querySnapshot) => {
     const results = querySnapshot.docs.map((doc) => {
@@ -146,10 +50,179 @@ function getPilots(cb, filters = {}) {
         id: doc.id,
         ...doc.data(),
         // Only plain objects can be passed to Client Components from Server Components
-        timestamp: doc.data().timestamp.toDate(),
+        timestamp: doc.data().timestamp?.toDate(),
       };
     });
 
     cb(results);
   });
+}
+
+// Pilot Card
+
+// Add pilot form
+// Use the context injector to add the CampaignId instead of a hidden form field
+export function AddPilotForm( initialState ) {
+  const [state, formAction, pending] = useActionState(addPilot, initialState);
+  const router = useRouter();
+
+  const [skill, setSkill] = useState(4);
+  const [edgeTokens, setEdgeTokens] = useState(1);
+  const [abilityCount, setAbilityCount] = useState(0);
+
+  const handleClose = (e) => {
+    router.back();
+  };
+
+  const improveSkill = (e) => {
+    if (skill > 0) {
+      setSkill(skill - 1);
+    }
+  }
+
+  const addTokens = (e) => {
+    if (edgeTokens < 10) {
+      setEdgeTokens(edgeTokens + 1);
+    }
+  }
+
+  const addAbility = (e) => {
+    if (abilityCount < 5) {
+      setAbilityCount(abilityCount + 1);
+    }
+  }
+
+  const abilities = [];
+  for (let i = 0; i < abilityCount; i++) {
+    abilities.push(
+        <select 
+          key={"ability"+i}
+          id={"ability"+i}
+          defaultValue={'BM'}
+          name={"ability"+i}
+          >
+          <option value={'BM'}>   </option>
+          <option value={'CV'}>Combat Vehicle</option>
+          <option value={'BA'}>Battle Armor</option>
+        </select>
+    );
+  }
+
+  return <form
+          action={formAction}
+          onSubmit={(e) => handleClose(e)}
+        >
+            <h1>New Pilot</h1>
+  
+            <p>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                placeholder="Pilot's Name"
+                required
+              />
+            </p>
+            <p>
+              <input
+                type="text"
+                name="callsign"
+                id="callsign"
+                placeholder="Pilot's Callsign"
+                required
+              />
+            </p>
+            <p>
+              <select id="type"
+                defaultValue={'BM'}
+                name="type"
+                >
+                <option value={'BM'}>BattleMech</option>
+                <option value={'CV'}>Combat Vehicle</option>
+                <option value={'BA'}>Battle Armor</option>
+              </select>
+            </p>
+
+            <p>Total SP: 150</p>
+  
+            <p>
+              <input
+                type="number"
+                name="skill"
+                id="skill"
+                value={skill}
+                disabled
+                required
+              />
+              <button
+                autoFocus
+                type="reset"
+                className="button--cancel"
+                disabled={skill < 1 || pending}
+                onClick={(e) => improveSkill(e)}
+              >
+                Improve Skill
+              </button>
+            </p>
+            <p>
+              <input
+                type="number"
+                name="edgeTokens"
+                id="edgeTokens"
+                value={edgeTokens}
+                disabled
+                required
+              />
+              <button
+                autoFocus
+                type="reset"
+                className="button--cancel"
+                onClick={(e) => addTokens(e)}
+                disabled={edgeTokens > 9}
+              >
+                Add Token
+              </button>
+            </p>
+            
+            <p>
+              <input
+                type="number"
+                name="abilities"
+                id="abilities"
+                value={abilityCount}
+                disabled
+                required
+              />
+              <button
+                autoFocus
+                type="reset"
+                className="button--cancel"
+                onClick={(e) => addAbility(e)}
+              >
+                Add Ability
+              </button>
+            </p>
+
+            {abilities}
+  
+            <menu>
+              <button
+                autoFocus
+                type="reset"
+                onClick={(e) => handleClose(e)}
+                disabled={pending}
+                className="button--cancel"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                value="confirm" 
+                disabled={pending}
+                className="button--confirm">
+                Submit
+              </button>
+            </menu>
+        </form>;
+
 }

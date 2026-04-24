@@ -43,8 +43,6 @@ export default function Header({ initialUser, campaigns }) {
     signInWithGoogle();
   };
 
-  console.log(campaigns);
-
   return (
     <header>
       <div className="shape"></div>
@@ -53,7 +51,7 @@ export default function Header({ initialUser, campaigns }) {
       <div className="menu">
         <button popoverTarget="main-menu" disabled={!user} popoverTargetAction="toggle" className="material-symbols-outlined">menu</button>
         <ul id="main-menu" popover="auto">
-          {campaigns.length > 0 ? campaigns.map((campaign) => (
+          {campaigns?.length > 0 ? campaigns.map((campaign) => (
             <li key={campaign.id}>
               <Link href={`/campaign/${campaign.id}`}>
                 {campaign.name}

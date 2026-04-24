@@ -16,6 +16,7 @@ export async function addCampaign(initiatalState, formData) {
     startingBV: Number(formData.get("startingBV")),
     startingSP: Number(formData.get("startingSP")),
     difficulty: Number(formData.get("difficulty")),
+    status: 'preparing',
   }
   let docRef = {};
   try {
@@ -24,7 +25,8 @@ export async function addCampaign(initiatalState, formData) {
       newCampaign
     );
     
-    await setDoc(doc(db, "campaigns", docRef.id, "users", formData.get("userId")), {});
+    // await setDoc(doc(db, "campaigns", docRef.id, "users", formData.get("userId")), {});
+    // await addDoc(collection(db, "campaigns", docRef.id, "users"), {userId: formData.get("userId")});
 
   } catch (e) {
     console.log("There was an error adding the document");
@@ -32,7 +34,7 @@ export async function addCampaign(initiatalState, formData) {
   }
   if (docRef && docRef.id) {
     revalidatePath('/');
-    redirect('/campaign/' + docRef.id);
+    redirect('/campaign/' + docRef.id + '/roster');
   }
 }
 
