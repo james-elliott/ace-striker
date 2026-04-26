@@ -6,6 +6,7 @@ import { Campaign } from "@/src/components/Campaign/Campaign";
 export default async function Page(props) {
   const params = await props.params;
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
+
   const campaign = await getCampaignById(
     getFirestore(firebaseServerApp),
     params.id,

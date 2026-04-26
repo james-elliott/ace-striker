@@ -8,7 +8,6 @@ export default async function Page() {
 
   return (
     <main className="home">
-      Full Page
       <AddCampaignForm userId={{user: userId}} />
     </main>
   );

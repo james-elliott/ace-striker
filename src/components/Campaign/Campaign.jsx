@@ -105,6 +105,7 @@ export function Campaign({
       <p>difficulty: {campaign.difficulty}</p>
       <p>startingBV: {campaign.startingBV}</p>
       <p>startingSP: {campaign.startingSP}</p>
+      <p>Force Name: {campaign.forceName}</p>
     </>
   );
 }
@@ -157,7 +158,7 @@ export function AddCampaignForm( initialState ) {
   
             <p>
               <input
-                type="text"
+                type="number"
                 name="startingBV"
                 id="startingBV"
                 placeholder="Set a maximum BV to start the campaign"
@@ -167,7 +168,7 @@ export function AddCampaignForm( initialState ) {
             </p>
             <p>
               <input
-                type="text"
+                type="number"
                 name="startingSP"
                 id="startingSP"
                 placeholder="Set the initial Supply Points you will have"
@@ -186,6 +187,16 @@ export function AddCampaignForm( initialState ) {
                 <option value={0.8}>Elite</option>
                 <option value={0.7}>Legendary</option>
               </select>
+            </p>
+
+            <p>
+              <input
+                type="text"
+                name="forceName"
+                id="forceName"
+                placeholder="Choose a name for the company in this campaign"
+                required
+              />
             </p>
   
             <input type="hidden" name="userId" value={initialState.userId.user} />

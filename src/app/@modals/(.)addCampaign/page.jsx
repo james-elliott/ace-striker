@@ -5,11 +5,10 @@ export default async function Page() {
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
 
   const userId = currentUser?.uid;
-  const initialState = { user: userId }
 
   return (
     <dialog open={true}>
-      <AddCampaignForm userId={initialState} />
+      <AddCampaignForm userId={{user: userId}} />
     </dialog>
   );
 }

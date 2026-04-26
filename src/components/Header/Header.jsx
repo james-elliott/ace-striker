@@ -8,8 +8,11 @@ import {
 } from "@/src/lib/firebase/auth.js";
 import { setCookie, deleteCookie } from "cookies-next";
 import { getUserSnapshotById } from "@/src/lib/firebase/firestore.js";
-import { getCampaignsSnapshot } from "../Campaign/Campaign";
+import { getCampaignSnapshotById } from "../Campaign/Campaign";
 import './Header.css';
+import { useSelectedLayoutSegments } from "next/navigation";
+import { db } from "@/src/lib/firebase/clientApp";
+import { getCampaignById } from "../Campaign/actions";
 
 function useUserSession(initialUser) {
   useEffect(() => {
@@ -32,6 +35,14 @@ function useUserSession(initialUser) {
 
 export default function Header({ initialUser, campaigns }) {
   const user = useUserSession(initialUser);
+  const segments = useSelectedLayoutSegments();
+  const [campaign, setCampaign] = useState();
+
+  useEffect(() => {
+    return getCampaignSnapshotById(segments[1], (data) => {
+      setCampaign(data);
+    });
+  }, [segments[1]]);
 
   const handleSignOut = (event) => {
     event.preventDefault();

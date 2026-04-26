@@ -14,14 +14,7 @@ export const dynamic = "force-dynamic";
 // export const revalidate = 0;
 
 export default async function Home(props) {
-  const searchParams = await props.searchParams;
-  // Using seachParams which Next.js provides, allows the filtering to happen on the server-side, for example:
-  // ?city=London&category=Indian&sort=Review
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
-  const restaurants = await getRestaurants(
-    getFirestore(firebaseServerApp),
-    searchParams
-  );
   const campaigns = await getCampaigns(
     getFirestore(firebaseServerApp),
     currentUser?.uid

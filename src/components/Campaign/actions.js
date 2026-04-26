@@ -40,7 +40,7 @@ export async function addCampaign(initiatalState, formData) {
 
 export async function getCampaigns(db = db, userId) {
   if (userId == null) {
-    console.log('Error: No user id');
+    console.log('Error: No user id provided to getCampaigns');
     return;
   }
   let q = query(collection(db, "campaigns"));//.where("owner", "==", userId));
@@ -60,6 +60,10 @@ export async function getCampaigns(db = db, userId) {
 export async function getCampaignById(db, campaignId, userId) {
   if (!campaignId) {
     console.log("Error: Invalid Campaign ID received: ", campaignId);
+    return;
+  }
+  if (!userId) {
+    console.log("Error: No userId provided to getCampaignById: ", userId);
     return;
   }
 
