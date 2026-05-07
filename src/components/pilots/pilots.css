@@ -1,0 +1,122 @@
+.pilots {
+  --primary-color: #B0B093;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  .pilot {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    corner-shape: bevel;
+    border-radius: 0 16px 0 16px;
+    border: 3px solid var(--primary-color);
+    padding: 12px;
+    gap: 12px;
+    margin-bottom: 4px;
+    min-width: 340px;
+    max-width: 380px;
+    box-shadow: inset 0 2px 12px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.15);
+    a {
+      color: var(--primary-color);
+    }
+    .row {
+      gap: 12px;
+    }
+    /* Need to move this elsewhere so it also applies to the new pilot screen
+    .portrait {
+      height: 94px;
+      width: 94px;
+      min-height: 94px;
+      min-width: 94px;
+      corner-shape: bevel;
+      border-radius: 0 0 10px 10px;
+      overflow: hidden;
+      img {
+        background: grey;
+        height: 100%;
+        width: 100%;
+
+        max-height: 100%;
+        max-width: 100%;
+      }
+    } */
+    .expand {
+      display: flex;
+      flex-grow: 1;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    &::after {
+      content: '';
+      display: block;
+      background: var(--primary-color);
+      height: 4px;
+      width: 60px;
+      position: absolute;
+      top: calc(100% - 4px);
+      right: 48px;
+      corner-shape: bevel;
+      border-radius: 4px 4px 0 0;
+    }
+  }
+}
+
+/* SP sliders */
+.pilot-form {
+  .row {
+    gap: 20px;
+  }
+  .portrait-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    anchor-name: --portrait-anchor;
+    button.portrait {
+      position-anchor: --portrait-anchor;
+      padding: 0;
+      border: 0;
+    }
+  }
+  .sp-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+}
+
+.ability-selectors {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+#pic-selector {
+  position-anchor: --portrait-anchor;
+  position-area: right span-bottom;
+  grid-template-columns: repeat(4, 1fr);
+  margin-left: 4px;
+  border: none;
+  padding: 4px;
+  box-shadow: 0 2px 4px black;
+  border-radius: 8px;
+  &:popover-open {
+    display: grid;
+  }
+  label {
+    display: flex;
+  }
+  .portrait {
+    border: 2px solid transparent;
+    cursor: pointer;
+    &:hover {
+      border-color: #B0B093;
+    }
+    &:has([checked]) {
+      border-color: #E0AD2A;
+    }
+  }
+  input {
+    display: none;
+  }
+}

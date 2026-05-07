@@ -1,11 +1,15 @@
-import { AddPilotForm } from "@/src/components/Pilots/Pilots";
+import { AddPilotForm } from "@/src/components/pilots/pilots";
+import React from "react";
 
 export default async function Page(props) {
   const params = await props.params;
   
   return (
-    <dialog open={true}>
-      <AddPilotForm campaignId={params.id} />
-    </dialog>
+    <>
+      <div className="shim"></div>
+      <dialog open={true}>
+        <AddPilotForm campaignId={params.id} />
+      </dialog>
+    </>
   );
 }

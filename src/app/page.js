@@ -1,7 +1,5 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { CampaignList } from "@/src/components/Campaign/Campaign";
-import RestaurantListings from "../components/RestaurantListings";
-import { getRestaurants } from "../lib/firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { getCampaigns } from "../components/Campaign/actions";
 

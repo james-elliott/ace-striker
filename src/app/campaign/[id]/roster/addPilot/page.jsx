@@ -1,10 +1,10 @@
-import { AddPilotForm } from "@/src/components/Pilots/Pilots";
+import { AddPilotForm } from "@/src/components/pilots/pilots";
 
 export default async function Page(props) {
   const params = await props.params;
 
   return (
-    <main className="home">
+    <main>
       <AddPilotForm campaignId={params.id} />
     </main>
   );

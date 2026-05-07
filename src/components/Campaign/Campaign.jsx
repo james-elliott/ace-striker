@@ -23,6 +23,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/src/lib/firebase/clientApp";
 import { addCampaign } from "./actions.js";
+import "./campaign.css";
 
 export function CampaignList({initialCampaigns, initialUser}) {
   

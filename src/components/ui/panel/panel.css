@@ -1,0 +1,31 @@
+.panel {
+  margin-top: 14px;
+  position: relative;
+  padding: 24px;
+  corner-top-right-shape: bevel;
+  border-top-right-radius: 42px;
+  background: white;
+  border: 5px solid var(--primary-color);
+  box-shadow: 0 4px 8px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  .title {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  &::before {
+    content: '';
+    border: 3px solid var(--primary-color);
+    left: 9px;
+    top: 9px;
+    right: 9px;
+    bottom: 9px;
+    position: absolute;
+    z-index: -1;
+    corner-top-right-shape: bevel;
+    border-top-right-radius: 36px;
+  }
+}
