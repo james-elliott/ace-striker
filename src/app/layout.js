@@ -1,8 +1,8 @@
 import "@/src/app/styles.css";
-import Header from "@/src/components/Header/Header.jsx";
+import Header from "@/src/components/ui/header/header.jsx";
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp";
 import { getFirestore } from "firebase/firestore";
-import { getCampaigns } from "../components/Campaign/actions";
+import { getCampaigns } from "../components/campaign/actions";
 // Force next.js to treat this route as server-side rendered
 // Without this line, during the build process, next.js will treat this route as static and build a static HTML file for it
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ export default async function RootLayout({ children, modals }) {
         <link href="https://fonts.googleapis.com/css2?family=Anta&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <Header initialUser={currentUser?.toJSON()} campaigns={campaigns} />
+        <Header initialUser={currentUser?.toJSON()} initialCampaigns={campaigns} />
 
         {children}
         {modals}

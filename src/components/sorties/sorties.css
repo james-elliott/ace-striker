@@ -1,0 +1,13 @@
+form.sortie {
+  width: 40vw;
+  margin: auto;
+  .row {
+    gap: 20px;
+    > :first-child {
+      width: 8ch;
+    }
+    > :last-child {
+      flex-grow: 1;
+    }
+  }
+}

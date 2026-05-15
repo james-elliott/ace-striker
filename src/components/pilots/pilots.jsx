@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form"
 import { CONST_EDGE_ABILITIES } from "../../lib/data/edge-abilities";
 import "./pilots.css";
 import { StatPair, StatBox } from "../ui/stats/stats";
-import Link from "next/link";
 import Panel from "../ui/panel/panel";
 import { SPslider } from "../ui/sliders/sliders";
 
@@ -79,6 +78,31 @@ export function Pilot(pilot) {
   );
 }
 
+export function getPilotsSnapshot(cb, campaignId) {
+  if (typeof cb !== "function") {
+    console.log("Error: The callback parameter is not a function");
+    return;
+  }
+  if (campaignId == null) {
+    console.log('no campaign id');
+    return;
+  }
+  let q = query(collection(db, "campaigns", campaignId, 'pilots'));
+
+  return onSnapshot(q, (querySnapshot) => {
+    const results = querySnapshot.docs.map((doc) => {
+      return {
+        id: doc.id,
+        ...doc.data(),
+        // Only plain objects can be passed to Client Components from Server Components
+        timestamp: doc.data().timestamp?.toDate(),
+      };
+    });
+
+    cb(results);
+  });
+}
+
 export function getPilotAbility(name) {
   if (CONST_EDGE_ABILITIES[name]) {
     return CONST_EDGE_ABILITIES[name];
@@ -124,34 +148,11 @@ export function getPilotTokens(pilot) {
 }
 
 // Get Pilots
-export function getPilotsSnapshot(cb, campaignId) {
-  if (typeof cb !== "function") {
-    console.log("Error: The callback parameter is not a function");
-    return;
-  }
-  if (campaignId == null) {
-    console.log('no campaign id');
-    return;
-  }
-  let q = query(collection(db, "campaigns", campaignId, 'pilots'));
 
-  return onSnapshot(q, (querySnapshot) => {
-    const results = querySnapshot.docs.map((doc) => {
-      return {
-        id: doc.id,
-        ...doc.data(),
-        // Only plain objects can be passed to Client Components from Server Components
-        timestamp: doc.data().timestamp?.toDate(),
-      };
-    });
-
-    cb(results);
-  });
-}
 
 // Add pilot form
 export function AddPilotForm( props ) {
-  const { control, register } = useForm();
+  const { register } = useForm();
   const router = useRouter();
   const addPilotToCampaign = addPilot.bind(null, props.campaignId);
 
@@ -257,12 +258,12 @@ export function AddPilotForm( props ) {
     <form
       action={addPilotToCampaign}
       onSubmit={(e) => handleClose(e)}
-      className="pilot-form"
+      className="pilot"
     >
       <Panel title="New Pilot">
         <div className="row">
           <div>
-          <label htmlFor="pic-selector">Portrait</label>
+            <label htmlFor="pic-selector">Portrait</label>
             <div className="portrait-wrapper" onClick={togglePicSelector}>
               <button className="portrait" type="button">
                 <img src={pic} />
@@ -279,6 +280,7 @@ export function AddPilotForm( props ) {
               type="text"
               {...register('callsign')}
               required
+              autoFocus
             />
           </div>
           <div>
@@ -366,11 +368,11 @@ export function AddPilotForm( props ) {
         <button 
           type="submit" 
           value="confirm"
+          disabled={pilotSP !== skillSP + tokenSP + abilitySP}
         >
           Submit
         </button>
         <button
-          autoFocus
           type="reset"
           onClick={(e) => handleClose(e)}
         >

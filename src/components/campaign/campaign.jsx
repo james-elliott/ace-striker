@@ -24,6 +24,8 @@ import {
 import { db, auth } from "@/src/lib/firebase/clientApp";
 import { addCampaign } from "./actions.js";
 import "./campaign.css";
+import Panel from "../ui/panel/panel.jsx";
+import { getSortiesSnapshot, SortieTable } from "../sorties/sorties.jsx";
 
 export function CampaignList({initialCampaigns, initialUser}) {
   
@@ -76,8 +78,6 @@ export function getCampaignsSnapshot(cb, uid) {
       return {
         id: doc.id,
         ...doc.data(),
-        // Only plain objects can be passed to Client Components from Server Components
-        timestamp: doc.data().timestamp?.toDate(),
       };
     });
 
@@ -86,34 +86,23 @@ export function getCampaignsSnapshot(cb, uid) {
 }
 
 export function Campaign({
-  id,
-  initialCampaign,
-  initialUserId,
+  campaignId,
+  initialSorties,
   children,
 }) {
-  const [campaign, setCampaign] = useState(initialCampaign);
-
-
-  useEffect(() => {
-    return getCampaignSnapshotById(id, (data) => {
-      setCampaign(data);
-    });
-  }, [id]);
 
   return (
-    <>
-      <p>This is the campaign: {campaign.name}</p>
-      <p>difficulty: {campaign.difficulty}</p>
-      <p>startingBV: {campaign.startingBV}</p>
-      <p>startingSP: {campaign.startingSP}</p>
-      <p>Force Name: {campaign.forceName}</p>
-    </>
+    <Panel title="Campaign Sorties" action={<Link href={`/campaign/${campaignId}/addSortie`}>Add Sortie</Link>}>
+      <div className="row">
+        <SortieTable initialSorties={initialSorties} campaignId={campaignId} />
+      </div>
+    </Panel>
   );
 }
 
 export function getCampaignSnapshotById(campaignId, cb) {
   if (!campaignId) {
-    console.log("Error: Invalid Campaign ID received: ", campaignId);
+    console.log("Error: Invalid Campaign ID received in getCampaignSnapshotById: ", campaignId);
     return;
   }
 
@@ -144,40 +133,59 @@ export function AddCampaignForm( initialState ) {
   return <form
           action={formAction}
           onSubmit={(e) => handleClose(e)}
+          className="campaign"
         >
-            <h1>New Campaign</h1>
+          <Panel title="New Campaign">
   
-            <p>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                placeholder="Name this campaign"
-                required
-              />
-            </p>
-  
-            <p>
-              <input
-                type="number"
-                name="startingBV"
-                id="startingBV"
-                placeholder="Set a maximum BV to start the campaign"
-                defaultValue={400}
-                required
-              />
-            </p>
-            <p>
-              <input
-                type="number"
-                name="startingSP"
-                id="startingSP"
-                placeholder="Set the initial Supply Points you will have"
-                defaultValue={400}
-                required
-              />
-            </p>
-            <p>
+            <div className="row">
+              <div>
+                <label htmlFor="name">Campaign Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  placeholder="Name this campaign"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="forceName">Force Name</label>
+                <input
+                  type="text"
+                  name="forceName"
+                  id="forceName"
+                  placeholder="Choose a name for the company in this campaign"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="row">
+              <div>
+                <label htmlFor="startingPV">Starting Unit Point Value</label>
+                <input
+                  type="number"
+                  name="startingPV"
+                  id="startingPV"
+                  placeholder="Set a maximum PV to start the campaign"
+                  defaultValue={400}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="startingSP">Starting Supply Points</label>
+                <input
+                  type="number"
+                  name="startingSP"
+                  id="startingSP"
+                  placeholder="Set the initial Supply Points you will have"
+                  defaultValue={400}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="difficulty">Difficulty</label>
               <select id="difficulty"
                 defaultValue={1.0}
                 name="difficulty"
@@ -188,20 +196,21 @@ export function AddCampaignForm( initialState ) {
                 <option value={0.8}>Elite</option>
                 <option value={0.7}>Legendary</option>
               </select>
-            </p>
+            </div>
 
-            <p>
-              <input
-                type="text"
-                name="forceName"
-                id="forceName"
-                placeholder="Choose a name for the company in this campaign"
-                required
-              />
-            </p>
+            <div>
+            </div>
   
             <input type="hidden" name="userId" value={initialState.userId.user} />
-            <menu>
+            </Panel>
+            <menu className="actions">
+              <button 
+                type="submit" 
+                value="confirm" 
+                disabled={pending}
+                className="button--confirm">
+                Submit
+              </button>
               <button
                 autoFocus
                 type="reset"
@@ -211,14 +220,8 @@ export function AddCampaignForm( initialState ) {
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
-                value="confirm" 
-                disabled={pending}
-                className="button--confirm">
-                Submit
-              </button>
             </menu>
+            
         </form>;
 
 }

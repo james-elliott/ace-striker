@@ -3,38 +3,29 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore, collection, addDoc, query, getDocs, Timestamp } from "firebase/firestore";
 
-export async function addPilot(campaignId, formData) {
+export async function addSortie(campaignId, formData) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
-  // Create the pilot object
-  const newPilot = {
+  // Create the sortie object
+  const newSortie = {
+    number: formData.get("number"),
     name: formData.get("name"),
-    callsign: formData.get("callsign"),
-    type: formData.get("type"),
-    skill: Number(formData.get("skill")),
-    edgeTokens: Number(formData.get("edgeTokens")),
-    abilities: formData.getAll('abilities'),
-    pilotSP: 150,
-    pic: formData.get('pic'),
-    skillSP: formData.get('skillSP'),
-    tokenSP: formData.get('tokenSP'),
-    abilitySP: formData.get('abilitySP'),
-    status: 'ready',
-    mvp: 0,
+    date: new Date(),
+    status: 'not started',
   }
 
-  // Write to the pilot collection
+  // Write to the sortie collection
   try {
-    const docRef = collection(db, 'campaigns', campaignId, 'pilots');
-    await addDoc(docRef, newPilot);
+    const docRef = collection(db, 'campaigns', campaignId, 'sorties');
+    await addDoc(docRef, newSortie);
   } catch (e) {
     console.log("There was an error adding the document");
     console.error("Error adding document: ", e);
   }
 }
 
-export async function getPilots(db = db, campaignId, userId) {
+export async function getSorties(db = db, campaignId, userId) {
   if (campaignId == null) {
     console.log('Error: No campaign id');
     return;
@@ -43,7 +34,7 @@ export async function getPilots(db = db, campaignId, userId) {
     console.log('Error: No user id provided to getPilots');
     return;
   }
-  let q = query(collection(db, "campaigns", campaignId, "pilots"));
+  let q = query(collection(db, "campaigns", campaignId, "sorties"));
 
   const results = await getDocs(q);
   return results.docs.map((doc) => {
@@ -51,7 +42,7 @@ export async function getPilots(db = db, campaignId, userId) {
       id: doc.id,
       ...doc.data(),
       // Only plain objects can be passed to Client Components from Server Components
-      // timestamp: doc.data().timestamp.toDate(),
+      date: doc.data().date.toDate(),
     };
   });
 }

@@ -1,23 +1,31 @@
 "use client";
 
-import Link from "next/link";
+import React from 'react';
 import './tabs.css';
 import { usePathname } from "next/navigation";
 
-export default function Tabs({ links }) {
+export default function Tabs({ children }) {
   const pathname = usePathname();
+  let links = [];
+
+  if (children?.length > 0) {
+    for(let child of children) {
+      if (child.props?.href && child.props.href === pathname) {
+        let newLink = React.cloneElement(child, {
+          className: child.props.className ? `${child.props.className} ${'active'}` : 'active', key: child.key
+        });
+        links.push(newLink);
+      } else {
+        links.push(child);
+      }
+    }
+  } else {
+    links = children;
+  }
 
   return (
     <nav className="tabs">
-      {links.length > 0 ? links.map((link, index) => {
-        return <Link
-          key={'link'+index}
-          href={link.href}
-          className={pathname === link.href ? 'active' : ''}
-        >
-          {link.content}
-        </Link>;
-      }) : null }
+      {links}
     </nav>
   );
 }

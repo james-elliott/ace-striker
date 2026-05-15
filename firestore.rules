@@ -38,6 +38,11 @@ service cloud.firestore {
         allow create: if allowedUser();
         allow update: if allowedUser();
       }
+      match /sorties/{sortieId} {
+        allow read: if allowedUser();
+        allow create: if allowedUser();
+        allow update: if allowedUser();
+      }
     }
     
     match /restaurants/{restaurantId} {

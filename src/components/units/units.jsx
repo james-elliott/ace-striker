@@ -1,16 +1,17 @@
 "use client";
 
-import { getMULASSearchResults } from "@/src/lib/utils/mulUtilities";
-import { getMULAerospaceRoles, getMULEraIDs, getMULEraLabel, getMULFactionIDs, getMULFactionLabels, getMULGroundRoles, getMULTypeIDs, getMULTypeLabel } from "@/src/lib/utils/mulUtilities";
+import { getMULASSearchResults, getMULAerospaceRoles, getMULEraIDs, getMULEraLabel, getMULFactionIDs, getMULFactionLabels, getMULGroundRoles, getMULTypeIDs, getMULTypeLabel } from "@/src/lib/utils/mulUtilities";
 import { generateUUID } from "@/src/lib/utils/generateUUID";
-import { useEffect, useState, Fragment } from "react";
-import { addUnit, getUnits } from "./actions";
+import { useEffect, useState, Fragment, useRef } from "react";
+import { addUnit } from "./actions";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/src/lib/firebase/clientApp";
-import Link from "next/link";
 import { StatPair } from "../ui/stats/stats";
 import "./unit.css";
 import { CONST_AS_SPECIAL_ABILITIES } from "@/src/lib/data/alpha-strike-abilities";
+import Panel from "../ui/panel/panel";
+import { PillInput } from "../ui/pills/pills";
+import { useRouter } from "next/navigation";
 
 export function ForceList({initialUnits, campaignId}) {
 
@@ -208,7 +209,7 @@ export function getUnitsSnapshot(cb, campaignId) {
 }
 
 export function AddUnitForm( props ) {
-
+  const router = useRouter();
   const [searchResults, setSearchResults] = useState([]);
   const [searchSort, setSearchSort] = useState('Name');
   const [sortAsc, setSortAsc] = useState(true);
@@ -216,14 +217,29 @@ export function AddUnitForm( props ) {
   const [search, setSearch] = useState('');
   const [rules, setRules] = useState('');
   const [tech, setTech] = useState('');
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState([]);
   const [era, setEra] = useState('');
   const [type, setType] = useState([18, 19, 21]);
-  const [factionSearch, setFactionSearch] = useState('');
-  const [factionSuggestions, setFactionSuggestions] = useState([]);
   const [factions, setFactions] = useState([]);
 
   let lastSearchId = null;
+
+  const handleAddUnit = (event, campaignId, unit) => {
+    event.preventDefault();
+    addUnit(campaignId, unit);
+    router.back();
+  }
+
+  const getRoleOptions = () => {
+    let defaultRoles = []
+    if ([18,19,20,21,23,24].some((role) => type.includes(role))) {
+      defaultRoles =  getMULGroundRoles();
+    }
+    if (type.includes(17)) {
+      defaultRoles =  defaultRoles.concat(getMULAerospaceRoles());
+    }
+    return defaultRoles;
+  }
 
   useEffect(() => {
     const searchTimeout = setTimeout(() => {
@@ -237,7 +253,7 @@ export function AddUnitForm( props ) {
 
   useEffect(() => {
     updateSearchResults();
-  }, [rules, tech, era, type, factions]);
+  }, [rules, tech, era, type, role, factions]);
 
   const updateRules = ( event ) => {
     setRules(event.currentTarget.value);
@@ -247,59 +263,33 @@ export function AddUnitForm( props ) {
     setTech(event.currentTarget.value);
   }
 
-  const updateRole = ( event ) => {
-    setRole(event.currentTarget.value);
-  }
-
   const updateEra = ( event ) => {
     setEra(event.currentTarget.value);
   }
 
-  const updateType = ( event ) => {
-
-    let newOptions = [];
-    if (event.target.selectedOptions.length > 0) {
-      for ( let option of event.target.selectedOptions) {
-        newOptions.push(parseInt(option.value));
-      }
-    }
-
-    setType(newOptions);
+  const updateType = ( newTypes ) => {
+    setType(newTypes);
   }
 
-  const updateFactionSearch = ( event ) => {
-      setFactionSearch(event.currentTarget.value);
-
-      let searchValue = event.currentTarget.value;
-      if( searchValue.length < 3 ) {
-        setFactionSuggestions([]);
-        return;
-      }
-
-      let arrFound = [];
-      for( let factionID of getMULFactionIDs() ) {
-        if( getMULFactionLabels(factionID).toLowerCase().includes( searchValue.toLowerCase() ) ) {
-          arrFound.push( factionID  );
-        }
-      }
-      setFactionSuggestions(arrFound);
+  const updateRole = ( newRoles ) => {
+    setRole(newRoles);
   }
 
-  const addFactionSelected = ( factionID ) => {
-    if( factions.includes( factionID ) ) {
-      return;
+  const renderRole = ( name ) => {
+    let rendered = name;
+    if (type.includes(17) && type.length > 1) {
+      if (getMULGroundRoles().includes(name)) {
+        // prepend a ground icon
+        rendered = '🦿 ' + name;
+      } else if (getMULAerospaceRoles().includes(name)) {
+        // Prepend a aero icon
+        rendered = '✈ ' + name;
+      }
     }
-    
-    let newFactions = [];
-    for (let faction of factions) {
-      newFactions.push(faction);
-    }
-    newFactions.push( factionID );
-    setFactions(newFactions);
+    return rendered;
   }
 
-  const removeFactionSelected = ( factionID ) => {
-    let newFactions = factions.filter( (faction) => faction !== factionID );
+  const updateFactions = (newFactions) => {
     setFactions(newFactions);
   }
 
@@ -348,6 +338,10 @@ export function AddUnitForm( props ) {
   }
 
   const updateSearchResults = async () => {
+    if (search.length < 3) {
+      console.log("Not enough characters to search");
+      return;
+    }
 
     let currentSearchId = generateUUID();
 
@@ -390,26 +384,32 @@ export function AddUnitForm( props ) {
   }
 
   return <>
-    <div className="col">
-      <h2>Search for Units</h2>
-      <div className="small-text text-center">
-        We integrate with the <a href="http://masterunitlist.info/" target="_blank">Master Unit List</a> to make sure that all the stats are as official and as up to date as possible.
-      </div>
-      <fieldset className="fieldset">
+      <Panel title="Add Units to Force">
+      
+      <form className="unit">
+        <div>
+          We integrate with the <a href="http://masterunitlist.info/" target="_blank">Master Unit List</a> to make sure that all the stats are as official and as up to date as possible.
+        </div>
         <div className="row">
 
-          <div className="col-md-6 text-center">
-            <input
-                  type="search"
-                  onChange={(e) => setSearch(e.currentTarget.value)}
-                  value={search}
-                  label="Search Terms"
-            />
-          </div>
+            <label>Search
+              <input
+                type="search"
+                onChange={(e) => setSearch(e.currentTarget.value)}
+                value={search}
+                autoFocus
+              />
+            </label>
+        </div>
 
-          <div className="col-md-6 text-center">
+        <details>
+          <summary>Advanced Search</summary>
+
+        <div className="column">
+        <div className="row">
+          
             <label>
-              Search Rules:<br />
+              Search Rules
               <select
                 onChange={updateRules}
                 value={rules}
@@ -420,13 +420,8 @@ export function AddUnitForm( props ) {
                 <option value="advanced">Advanced</option>
               </select>
             </label>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6 text-center">
             <label>
-              Search Tech:<br />
+              Search Tech
               <select
                 onChange={updateTech}
                 value={tech}
@@ -438,23 +433,7 @@ export function AddUnitForm( props ) {
             </label>
 
             <label>
-              Type:<br />
-              <select
-                onChange={updateType}
-                value={type}
-                multiple
-              >
-                <option value="">All</option>
-                {getMULTypeIDs().map( (typeID ) => {
-                  return <option key={typeID} value={typeID}>{getMULTypeLabel( typeID )}</option>
-                })}
-              </select>
-            </label>
-          </div>
-
-          <div className="col-md-6 text-center">
-            <label>
-              Era:<br />
+              Era
               <select
                 onChange={updateEra}
                 value={era}
@@ -466,71 +445,26 @@ export function AddUnitForm( props ) {
               </select>
             </label>
 
-            <label>
-              Role:<br />
-              <select
-                onChange={updateRole}
-                value={role}
-              >
-                <option value="">All</option>
-                { type.includes(18) && type.includes(17) ? (
-                  <>
-                    <optgroup label="Ground Unit Roles">
-                    {getMULGroundRoles().map( (role, roleIndex ) => {
-                      return <option key={roleIndex} value={role}>{role}</option>
-                    })}
-                    </optgroup>
-                    <optgroup label="Aerospace Roles">
-                    {getMULAerospaceRoles().map( (role, roleIndex ) => {
-                      return <option key={roleIndex} value={role}>{role}</option>
-                    })}
-                    </optgroup>
-                  </>
-                ) : getMULGroundRoles().map( (role, roleIndex ) => {
-                      return <option key={roleIndex} value={role}>{role}</option>
-                    }) }
-
-
-              </select>
-            </label>
-          </div>
         </div>
-                     
+
         <div className="row">
-          <div className="col-md-12 text-center">
-            <input
-                type="search"
-                onChange={updateFactionSearch}
-                value={factionSearch}
-                label="Filter Availability By Factions"
-                placeholder='Type 3 or more characters to search. MUL uses OR logic for multiple factions.'
-              />
-          </div>
+          <label>
+            Type
+            <PillInput id="type" onUpdate={updateType} selected={type} options={getMULTypeIDs()} optionsCB={getMULTypeLabel} showAll={true} />
+          </label>
 
-          <div className="col-md-6 text-center">
-            {factionSuggestions.length > 0 ? (
-              <label htmlFor="factionFilter">
-                Add to Faction Filter?<br />
-                {factionSuggestions.map( (factionID, index) => { 
-                  return <div key={factionID+index} className="text-left"><button onClick={() => addFactionSelected(factionID)} className="btn-sm btn btn-primary">Add</button>&nbsp;{getMULFactionLabels(factionID)}</div>
-                })}
-              </label>
-            ) : null}
-          </div>
-
-          <div className="col-md-6 text-center">
-            {factions.length > 0 ? (
-              <label htmlFor="factionFilter">
-                Current Faction Filter:<br />
-                {factions.map( (factionID, index) => { 
-                  return <div key={factionID + index} className="text-left"><button onClick={() => removeFactionSelected(factionID)} className="btn btn-sm btn-danger">Remove</button>{getMULFactionLabels(factionID)}</div>
-                })}
-              </label>
-            ):null}
-          </div>
+          <label>
+            Role
+            <PillInput id="role" onUpdate={updateRole} selected={role} options={getRoleOptions()} optionsCB={renderRole} showAll={true}/>
+          </label>
         </div>
-                  
-      </fieldset>
+
+        <div className="row">
+          <label>Filter Availability By Factions
+            <PillInput id="factions" onUpdate={updateFactions} selected={factions} options={getMULFactionIDs()} optionsCB={getMULFactionLabels} />
+          </label>
+        </div></div>
+        </details>
 
       <h3 className="text-center">
         Search Results ({isSearching ? '...' : searchResults.length})
@@ -540,19 +474,13 @@ export function AddUnitForm( props ) {
         <table className="table">
           <thead>
             <tr>
-              <th>&nbsp;</th>
               <th onClick={(e) => handleSort('Name')} className={searchSort === "Name" ? sortAsc ? 'active' : 'active desc' : ''}>Name</th>
               <th onClick={(e) => handleSort('Rules')} className={searchSort === "Rules" ? sortAsc ? 'active' : 'active desc' : ''}>Rules</th>
               <th onClick={(e) => handleSort('Technology.Name')} className={searchSort === "Technology.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Tech</th>
               <th onClick={(e) => handleSort('EraStart')} className={searchSort === "EraStart" ? sortAsc ? 'active' : 'active desc' : ''}>Era</th>
               <th onClick={(e) => handleSort('BFType')} className={searchSort === "BFType" ? sortAsc ? 'active' : 'active desc' : ''}>Type</th>
               <th onClick={(e) => handleSort('BFPointValue')} className={searchSort === "BFPointValue" ? sortAsc ? 'active' : 'active desc' : ''}>Points</th>
-
-            </tr>
-            <tr>
-              <th>&nbsp;</th>
-              <th colSpan={4}>Notes</th>
-              <th colSpan={2} onClick={(e) => handleSort('Role.Name')} className={searchSort === "Role.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Role</th>
+              <th onClick={(e) => handleSort('Role.Name')} className={searchSort === "Role.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Role</th>
             </tr>
           </thead>
 
@@ -576,17 +504,16 @@ export function AddUnitForm( props ) {
                 return (
                   <tbody key={unitIndex}>
                     <tr>
-                      <td>{asUnit.Name} <a href="#" onClick={(e) => addUnit(props.campaignId, asUnit)}>Add Unit</a></td>
-
+                      <td>{asUnit.Name} <a href="#" onClick={(e) => handleAddUnit(e, props.campaignId, asUnit)}>Add Unit</a></td>
                       <td>{asUnit.Rules}</td>
                       <td>{asUnit.Technology.Name}</td>
                       <td>{getMULEraLabel(asUnit.EraId)}</td>
                       <td>{asUnit.BFType}</td>
                       <td>{asUnit.BFPointValue}</td>
-
+                      <td className=" text-left">{asUnit.Role.Name}</td>
                     </tr>
                     <tr>
-                      <td colSpan={4} className=" text-left">
+                      <td colSpan={7} className=" text-left">
                         <strong title="Move">MV</strong>: {asUnit.BFMove}
                         &nbsp;|&nbsp;<strong title="Armor/Internal Structure values">A/IS</strong>: {asUnit.BFArmor}/{asUnit.BFStructure}
                         &nbsp;|&nbsp;<strong title="Alpha Strike Damage Bands">Damage</strong>: {asUnit.BFDamageShort}/{asUnit.BFDamageMedium}/{asUnit.BFDamageLong}
@@ -601,9 +528,6 @@ export function AddUnitForm( props ) {
                           </>
                         ) : null}
 
-                      </td>
-                      <td colSpan={3} className=" text-left">
-                        {asUnit.Role.Name}
                       </td>
                     </tr>
                   </tbody>
@@ -632,9 +556,9 @@ export function AddUnitForm( props ) {
             </>
           )}
 
-        </table>
-      </div>
-    </div>
+        </table></div>
+      </form>
+    </Panel>
   </>
 
 }

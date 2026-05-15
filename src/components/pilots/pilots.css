@@ -61,8 +61,8 @@
   }
 }
 
-/* SP sliders */
-.pilot-form {
+/* Pilot add/edit form styling */
+form.pilot {
   .row {
     gap: 20px;
   }
@@ -82,7 +82,6 @@
     flex-direction: column;
     gap: 16px;
   }
-  
 }
 
 .ability-selectors {

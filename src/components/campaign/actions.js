@@ -12,8 +12,9 @@ export async function addCampaign(initiatalState, formData) {
 
   const newCampaign = {
     name: formData.get('name'),
+    forceName: formData.get('forceName'),
     users: [formData.get("userId")],
-    startingBV: Number(formData.get("startingBV")),
+    startingPV: Number(formData.get("startingPV")),
     startingSP: Number(formData.get("startingSP")),
     difficulty: Number(formData.get("difficulty")),
     status: 'preparing',
@@ -43,7 +44,7 @@ export async function getCampaigns(db = db, userId) {
     console.log('Error: No user id provided to getCampaigns');
     return;
   }
-  let q = query(collection(db, "campaigns"));//.where("owner", "==", userId));
+  let q = query(collection(db, "campaigns"));
   q = query(q, where("users", "array-contains", userId));
 
   const results = await getDocs(q);
@@ -51,15 +52,13 @@ export async function getCampaigns(db = db, userId) {
     return {
       id: doc.id,
       ...doc.data(),
-      // Only plain objects can be passed to Client Components from Server Components
-      //timestamp: doc.data().timestamp.toDate(),
     };
   });
 }
 
 export async function getCampaignById(db, campaignId, userId) {
   if (!campaignId) {
-    console.log("Error: Invalid Campaign ID received: ", campaignId);
+    console.log("Error: Invalid Campaign ID received to getCampaignById: ", campaignId);
     return;
   }
   if (!userId) {
@@ -69,8 +68,11 @@ export async function getCampaignById(db, campaignId, userId) {
 
   const docRef = doc(db, "campaigns", campaignId);
   const docSnap = await getDoc(docRef);
-  return {
-    ...docSnap.data(),
-    // timestamp: docSnap.data().timestamp.toDate(),
-  };
+  if (docSnap.data()) {
+    return {
+      ...docSnap.data(),
+    }
+  } else {
+    return;
+  }
 }

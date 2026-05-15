@@ -6,11 +6,11 @@ import { redirect } from "next/navigation";
 
 // Save unit to campaign force
 export async function addUnit(campaignId, unitData) {
-  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
   // First we check the existing force to make sure we don't have too many duplicates of the same class or variant.
-  const force = await getUnits(db, campaignId);
+  const force = await getUnits(db, campaignId, currentUser?.uid);
   let classFilter = force.filter((unit) => unit.class == unitData.Class);
   let variantFilter = classFilter.filter((unit) => unit.variant == unitData.Variant);
   if (classFilter.length > 1) {
@@ -90,9 +90,13 @@ export async function addUnit(campaignId, unitData) {
 //   redirect(`/campaign/` + campaignId + `/roster`);
 }
 
-export async function getUnits(db = db, campaignId) {
+export async function getUnits(db = db, campaignId, userId) {
   if (campaignId == null) {
     console.log('Error: No campaign id');
+    return;
+  }
+  if (userId == null) {
+    console.log('Error: No user id provided to getUnits');
     return;
   }
   let q = query(collection(db, "campaigns", campaignId, "units"));

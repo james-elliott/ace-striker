@@ -1,15 +1,9 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { CampaignList } from "@/src/components/Campaign/Campaign";
+import { CampaignList } from "@/src/components/campaign/campaign";
 import { getFirestore } from "firebase/firestore";
-import { getCampaigns } from "../components/Campaign/actions";
-
-// Force next.js to treat this route as server-side rendered
-// Without this line, during the build process, next.js will treat this route as static and build a static HTML file for it
+import { getCampaigns } from "../components/campaign/actions";
 
 export const dynamic = "force-dynamic";
-
-// This line also forces this route to be server-side rendered
-// export const revalidate = 0;
 
 export default async function Home(props) {
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
@@ -30,10 +24,6 @@ export default async function Home(props) {
         initialUser={currentUser.toJSON()}
       /> ) : null
       }
-      {/* <RestaurantListings
-        initialRestaurants={restaurants}
-        searchParams={searchParams}
-      /> */}
     </main>
   );
 }

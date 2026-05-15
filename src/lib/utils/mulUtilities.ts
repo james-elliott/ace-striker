@@ -1,7 +1,7 @@
 import { replaceAll } from "./replaceAll";
 
 export function getMULFactionLabels(id: number): string {
-    if(id === 1){ return 'Clan Burrock'; }
+        if(id === 1){ return 'Clan Burrock'; }
         if(id === 2){ return 'Clan Blood Spirit'; }
         if(id === 3){ return 'Extinct'; }
         if(id === 4){ return 'Unique'; }
@@ -265,7 +265,7 @@ export async function getMULASSearchResults(
     searchTerm: string,
     mechRules: string,
     techFilter: string,
-    roleFilter: string,
+    roleFilter: string[],
     eraFilter: number,
     typeFilter: number[],
     factionFilter: number[],
@@ -314,8 +314,10 @@ export async function getMULASSearchResults(
     }
 
     let roleFilterURI: string[] = [];
-    if( roleFilter.trim() ) {
-        roleFilterURI.push( "&Roles=" + replaceAll(roleFilter, " ", "%20", false, false, true) );
+    if( roleFilter.length > 0 && roleFilter[0] !== '') {
+        roleFilter.map((role) => {
+            roleFilterURI.push( "&Roles=" + replaceAll(role, " ", "%20", false, false, true) );
+        })
     }
 
     let techFilterURI: string[] = [];
@@ -337,7 +339,7 @@ export async function getMULASSearchResults(
 
     let typesFilterURI: string[] = [];
 
-    if( typeFilter.length > 0 ) {
+    if( typeFilter.length > 0) {
         typeFilter.map((type) => {
             typesFilterURI.push( "&Types=" + type );
         });

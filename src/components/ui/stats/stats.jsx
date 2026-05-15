@@ -6,8 +6,6 @@ export function StatPair({label, values = []}) {
 
 export function StatBox( {label, children }) {
 
-  // wrapper, title, contentbox
-
   return (
     <div className="stat-box">
       <div className="title">{label}</div>

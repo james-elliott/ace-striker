@@ -1,13 +1,16 @@
 nav.tabs {
   display: flex;
   justify-content: space-around;
+  align-content: center;
+  min-height: 44px;
   a {
+    align-content: center;
     color: #4F4F49;
     font-size: 16px;
     font-weight: 500;
     display: block;
     min-width: 200px;
-    padding: 8px 24px 9px;
+    padding: 0 24px;
     text-align: center;
     position: relative;
     transition: all 300ms;
@@ -29,5 +32,16 @@ nav.tabs {
       }
     }
   }
+  > *:not(a) {
+    align-content: end;
+  }
 }
 
+body > nav.tabs {
+  padding: 0 2.75rem;
+}
+
+/* Add some space before content when the tabs are page level */
+header ~ nav.tabs {
+  margin-bottom: 1rem;
+}

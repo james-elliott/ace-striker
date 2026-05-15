@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   signInWithGoogle,
@@ -7,12 +7,9 @@ import {
   onIdTokenChanged,
 } from "@/src/lib/firebase/auth.js";
 import { setCookie, deleteCookie } from "cookies-next";
-import { getUserSnapshotById } from "@/src/lib/firebase/firestore.js";
-import { getCampaignSnapshotById } from "../Campaign/Campaign";
-import './Header.css';
+import { getCampaignsSnapshot } from "../../campaign/campaign";
+import './header.css';
 import { useSelectedLayoutSegments } from "next/navigation";
-import { db } from "@/src/lib/firebase/clientApp";
-import { getCampaignById } from "../Campaign/actions";
 
 function useUserSession(initialUser) {
   useEffect(() => {
@@ -33,16 +30,16 @@ function useUserSession(initialUser) {
   return initialUser;
 }
 
-export default function Header({ initialUser, campaigns }) {
+export default function Header({ initialUser, initialCampaigns }) {
   const user = useUserSession(initialUser);
-  const segments = useSelectedLayoutSegments();
-  const [campaign, setCampaign] = useState();
+  const [campaigns, setCampaigns] = useState(initialCampaigns);
+  const campaignMenu = useRef();
 
   useEffect(() => {
-    return getCampaignSnapshotById(segments[1], (data) => {
-      setCampaign(data);
-    });
-  }, [segments[1]]);
+    return getCampaignsSnapshot((data) => {
+      setCampaigns(data);
+    }, user?.uid);
+  },[user]);
 
   const handleSignOut = (event) => {
     event.preventDefault();
@@ -54,17 +51,19 @@ export default function Header({ initialUser, campaigns }) {
     signInWithGoogle();
   };
 
+  const hideMenus = () => {
+    campaignMenu.current.hidePopover();
+  }
+
   return (
     <header>
       <div className="shape"></div>
-      
-      
       <div className="menu">
-        <button popoverTarget="main-menu" disabled={!user} popoverTargetAction="toggle" className="material-symbols-outlined">menu</button>
-        <ul id="main-menu" popover="auto">
+        <button popoverTarget="main-menu" disabled={!user} className="material-symbols-outlined">menu</button>
+        <ul id="main-menu" popover="auto" className="popover" ref={campaignMenu}>
           {campaigns?.length > 0 ? campaigns.map((campaign) => (
             <li key={campaign.id}>
-              <Link href={`/campaign/${campaign.id}`}>
+              <Link href={campaign.status == 'preparing' ? `/campaign/${campaign.id}/roster` : `/campaign/${campaign.id}`} onClick={hideMenus}>
                 {campaign.name}
               </Link>
             </li>
@@ -76,10 +75,14 @@ export default function Header({ initialUser, campaigns }) {
         </ul>
       </div>
 
+      {/* { campaign ? <span>{campaign.name}</span> : null } */}
+
       <Link href="/" className="logo">Ace Striker</Link>
 
+      {/* { campaign ? <span>{ campaign.forceName }</span> : null } */}
+
       <div className="menu">
-        <button popoverTarget="user-menu" popoverTargetAction="toggle" className="material-symbols-outlined">
+        <button popoverTarget="user-menu" className="material-symbols-outlined">
           {user ? (<img
             className="profileImage"
             src={user.photoURL || "/profile.svg"}

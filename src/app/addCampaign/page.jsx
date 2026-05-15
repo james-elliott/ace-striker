@@ -1,5 +1,5 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { AddCampaignForm } from "@/src/components/Campaign/Campaign";
+import { AddCampaignForm } from "@/src/components/campaign/campaign";
 
 export default async function Page() {
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
@@ -7,7 +7,7 @@ export default async function Page() {
   const userId = currentUser?.uid;
 
   return (
-    <main className="home">
+    <main>
       <AddCampaignForm userId={{user: userId}} />
     </main>
   );

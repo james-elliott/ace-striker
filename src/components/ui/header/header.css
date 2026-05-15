@@ -4,7 +4,7 @@ body {
 }
 
 header {
-    height: 40px;
+    height: 2.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -24,9 +24,26 @@ header {
         align-self: center;
         color: #fff;
         transition: all 200ms;
+        width: 15.25rem;
+        height: 2.5rem;
+        line-height: 2.5rem;
+        text-align: center;
+        border-radius: 0 0 .75rem .75rem;
+        position: relative;
         &:hover {
-            color: color-mix(in srgb, #e7be1e 20%, #fff 80%);
             text-shadow: 0 2px 4px rgba(0,0,0,.85), 0 1px 8px rgba(0,0,0,1);
+            &:after {
+                content: '';
+                left: -.125rem;
+                right: -.125rem;
+                top: -.125rem;
+                bottom: -.125rem;
+                z-index: -1;
+                background: rgba(255,255,255,.15);
+                position: absolute;
+                filter: blur(.25rem);
+                border-radius: inherit;
+            }
         }
     }
 
@@ -73,8 +90,9 @@ header {
             z-index: 1;
         }
     }
-    & * {
+    & *:not(.shape) {
         z-index: 0;
+        pointer-events: auto;
     }
 
     .menu {
@@ -91,7 +109,6 @@ header {
   a {
     text-decoration: none;
     color: black;
-    pointer-events: auto;
   }
   .profileImage {
     border-radius: 100%;
@@ -104,6 +121,18 @@ header {
   }
   button {
     pointer-events: auto;
+  }
+  span {
+    flex-grow: 1;
+    text-align: center;
+    flex-basis: 25%;
+    font-weight: 600;
+    text-transform: uppercase;
+    position: relative;
+    line-height: 1rem;
+    font-size: .875rem;
+    top: -.25rem;
+    text-shadow: 0 0 8px rgba(255,255,255,.35);
   }
 }
 
@@ -177,10 +206,21 @@ header {
     cursor: default;
     border-radius: 0;
     border-bottom-right-radius: 12px;
-    
+    position: relative;
     &:not([disabled]):hover {
-        background: rgba(255,255,255,.2);
         cursor: pointer;
+        &:after {
+            content: '';
+            left: -.125rem;
+            right: -.125rem;
+            top: -.125rem;
+            bottom: -.125rem;
+            z-index: -1;
+            background: rgba(255,255,255,.25);
+            position: absolute;
+            filter: blur(.25rem);
+            border-radius: inherit;
+        }
     }
     &:has(+ :popover-open) {
         background: #EDEDE8;

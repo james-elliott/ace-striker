@@ -1,5 +1,4 @@
 .panel {
-  margin-top: 14px;
   position: relative;
   padding: 24px;
   corner-top-right-shape: bevel;
@@ -11,10 +10,12 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  .title {
+  > .title {
     display: flex;
     gap: 16px;
     align-items: center;
+    color: var(--primary-color);
+    padding-right: 1rem;
   }
   &::before {
     content: '';
