@@ -3,7 +3,7 @@
 import { getMULASSearchResults, getMULAerospaceRoles, getMULEraIDs, getMULEraLabel, getMULFactionIDs, getMULFactionLabels, getMULGroundRoles, getMULTypeIDs, getMULTypeLabel } from "@/src/lib/utils/mulUtilities";
 import { generateUUID } from "@/src/lib/utils/generateUUID";
 import { useEffect, useState, Fragment, useRef } from "react";
-import { addUnit } from "./actions";
+import { addUnit, removeUnit } from "./actions";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/src/lib/firebase/clientApp";
 import { StatPair } from "../ui/stats/stats";
@@ -12,6 +12,7 @@ import { CONST_AS_SPECIAL_ABILITIES } from "@/src/lib/data/alpha-strike-abilitie
 import Panel from "../ui/panel/panel";
 import { PillInput } from "../ui/pills/pills";
 import { useRouter } from "next/navigation";
+import { convertUnit, cachedResults } from "./utils";
 
 export function ForceList({initialUnits, campaignId}) {
 
@@ -23,10 +24,22 @@ export function ForceList({initialUnits, campaignId}) {
     }, campaignId);
   },[]);
 
+  const removeUnitFromForce = (unit) => {
+    removeUnit(campaignId, unit);
+  }
+
+
   return (
     <>
       <ul className="units">
-          {units.length > 0 ? units.map((unit) => Unit(unit)) : <span>No Units</span> }
+          {units.length > 0 ? units.map((unit, unitIndex) => {
+            return <Unit key={unitIndex} 
+              unit={unit} 
+              actions={[
+                {name: 'Remove', cb: removeUnitFromForce}
+              ]}
+              />
+          }) : <span>No Units</span> }
       </ul>
     </>
   );
@@ -63,6 +76,16 @@ const getTMM = (unit) => {
   return tmm;
 }
 
+const getMoves = (unit) => {
+  const moves = [];
+  if (unit.movement.length > 0) {
+    unit.movement.map((movement) => {
+      moves.push(movement.move + (movement.type != 'g' ? movement.type : null))
+    });
+  }
+  return moves;
+}
+
 const getHealth = (unit) => {
   let armorPips = [];
   let structurePips = [];
@@ -72,10 +95,10 @@ const getHealth = (unit) => {
 
   for(let i = 0; i < columnCount; i++) {
     if (i < unit.armor) {
-      armorPips.push(<a key={i} href="">{i+1}</a>);
+      armorPips.push(<a key={i}>{i+1}</a>);
     }
     if (i < unit.structure) {
-      structurePips.push(<a key={i} href="">{i+1}</a>);
+      structurePips.push(<a key={i}>{i+1}</a>);
     }
     columns += "1fr ";
   }
@@ -98,6 +121,28 @@ const getDamage = (unit) => {
       )) : ' none' }
     </span>
   </div>;
+}
+
+const getAbilities = (unit) => {
+  let abilities = [];
+
+  for (let name of unit.abilities) {
+    let ability = getUnitAbility(name);
+    if (ability) {
+      abilities.push(
+        <Fragment key={ability.rawTag}>
+          <button className="link" type="button" popoverTarget={unit.id + ability.rawTag + "-popover"} popoverTargetAction="toggle">{ability.rawTag}</button>
+          <div popover="auto" id={unit.id + ability.rawTag+"-popover"}>
+            <h4>{ability.name}</h4>
+            <div className="type">{ability.tag}<span>page {ability.asce_page}</span></div>
+            {ability.summary.map((text, index) => (
+              <p key={index}>{text}</p>
+            ))}
+          </div>
+        </Fragment>);
+    }
+  }
+  return abilities;
 }
 
 const getUnitAbility = (tag) => {
@@ -133,48 +178,76 @@ const getUnitAbility = (tag) => {
   return null;
 }
 
-export function Unit( unit ) {
-  let abilities = [];
-  
-  for (let name of unit.abilities) {
-    let ability = getUnitAbility(name);
-    if (ability) {
-      abilities.push(
-        <Fragment key={ability.rawTag}>
-          <button className="link" type="button" popoverTarget={ability.rawTag + "-popover"} popoverTargetAction="toggle">{ability.rawTag}</button>
-          <div popover="auto" id={ability.rawTag+"-popover"}>
-            <h4>{ability.name}</h4>
-            <div className="type">{ability.tag}<span>page {ability.asce_page}</span></div>
-            {ability.summary.map((text, index) => (
-              <p key={index}>{text}</p>
-            ))}
-          </div>
-        </Fragment>);
+export function Unit( {unit, onClick, actions = null} ) {
+  const actionHolder = useRef();
+  const actionTarget = useRef();
+
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick();
+    } else {
+      actionHolder.current.showPopover({source: actionTarget.current});
     }
   }
 
-  return <div key={unit.id} className="unit">
+  return <div key={unit.id} className='unit' ref={actionTarget} popoverTarget={unit.id + "-actions"} onClick={(e) => handleClick(e)}>
     <div className="data">
       <div className="">
         <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
       </div>
       <div className="row">
-        <span className="stat">Type: <em>{unit.type}</em></span>
-        <span className="stat">MV:&nbsp; 
-            {unit.movement.length > 0 ? unit.movement.map((movement, index) => (
-              <em key={index}>{movement.move}{movement.type != 'g' ? movement.type : null}</em> 
-            )) : ' none' }
-          </span>
+        <StatPair label="Type" values={unit.type} />
+        <StatPair label="MV" values={getMoves(unit)} />
         <StatPair label="TMM" values={getTMM(unit)} />
-        <span className="stat">Size: <em>{unit.size}</em></span>
+        <StatPair label="Size" values={unit.size} />
       </div>
       <div className="combat row">
         {getHealth(unit)}
         {getDamage(unit)}
-        <span className="stat">OV: <em>{unit.overheat}</em></span>
+        
+        <StatPair label="OV" values={unit.overheat} />
       </div>
       <div className="abilities">
-        {abilities}
+        {getAbilities(unit)}
+      </div>
+    </div>
+    <img src={unit.imageURL} />
+    <div className="pv">{unit.pv}</div>
+    {actions?.length > 0 || true ? 
+      <div className="actions" id={unit.id + "-actions"} popover="auto" ref={actionHolder}>
+        {actions.map((action, index) => {
+          // Create the actions
+          return <button key={index} type="button" onClick={() => action.cb(unit)}>{action.name}</button>
+        })}
+      </div> : null }
+  </div>;
+}
+
+export function UnitWide( {unit, onClick, actions, className} ) {
+
+  return <div key={unit.id} className={className ? className + " unit wide" : "unit wide"} onClick={onClick ? onClick : null}>
+    <div className="data">
+      <div className="">
+        <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
+      </div>
+      <div className="row">
+        <StatPair label="Type" values={unit.type} />
+        <StatPair label="MV" values={getMoves(unit)} />
+        <StatPair label="TMM" values={getTMM(unit)} />
+        <StatPair label="Size" values={unit.size} />
+        <StatPair label="Role" values={unit.role.name} />
+        <StatPair label="Tech" values={unit.tech.name} />
+      </div>
+      <div className="combat row">
+        {getHealth(unit)}
+        {getDamage(unit)}
+        
+        <StatPair label="OV" values={unit.overheat} />
+        <button className="era-icon link" type="button" popoverTargetAction="toggle" popoverTarget={unit.mulID + unit.era.name} title={unit.era.name} style={{backgroundImage: 'url(' + unit.era.iconURL + ')'}}>{unit.era.name}</button>
+        <div popover="auto" id={unit.mulID + unit.era.name}>{unit.era.name}</div>
+      </div>
+      <div className="abilities">
+        {getAbilities(unit)}
       </div>
     </div>
     <img src={unit.imageURL} />
@@ -208,9 +281,9 @@ export function getUnitsSnapshot(cb, campaignId) {
   });
 }
 
-export function AddUnitForm( props ) {
+export function AddUnitForm( {campaignId} ) {
   const router = useRouter();
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState(cachedResults);
   const [searchSort, setSearchSort] = useState('Name');
   const [sortAsc, setSortAsc] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -221,14 +294,33 @@ export function AddUnitForm( props ) {
   const [era, setEra] = useState('');
   const [type, setType] = useState([18, 19, 21]);
   const [factions, setFactions] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState();
+  const autofocus = useRef();
 
   let lastSearchId = null;
 
-  const handleAddUnit = (event, campaignId, unit) => {
-    event.preventDefault();
-    addUnit(campaignId, unit);
-    router.back();
+  const handleSubmit = (unit) => {
+    if (unit) {
+      addUnit(campaignId, unit);
+      router.back();
+    }
   }
+
+  const handleSelection = (event, unit) => {
+    if (event.target.tagName == "BUTTON") {
+      console.log('aborting because it\'s a button');
+      return;
+    }
+    if (selectedUnit !== unit) {
+      setSelectedUnit(unit);
+    } else {
+      setSelectedUnit();
+    }
+  }
+
+  const handleClose = (e) => {
+    window.history.back();
+  };
 
   const getRoleOptions = () => {
     let defaultRoles = []
@@ -254,6 +346,10 @@ export function AddUnitForm( props ) {
   useEffect(() => {
     updateSearchResults();
   }, [rules, tech, era, type, role, factions]);
+
+  useEffect(() => {
+    autofocus.current.focus();
+  }, []);
 
   const updateRules = ( event ) => {
     setRules(event.currentTarget.value);
@@ -370,7 +466,6 @@ export function AddUnitForm( props ) {
 
       data = sortResults(searchSort, sortAsc, data);
 
-      //   console.log("updateSearchResults data", data);
       setSearchResults(data);
       setIsSearching(false);
 
@@ -384,9 +479,9 @@ export function AddUnitForm( props ) {
   }
 
   return <>
-      <Panel title="Add Units to Force">
       
-      <form className="unit">
+      <form className="unit" action={() => handleSubmit(selectedUnit)}>
+      <Panel title="Add Unit to Force">
         <div>
           We integrate with the <a href="http://masterunitlist.info/" target="_blank">Master Unit List</a> to make sure that all the stats are as official and as up to date as possible.
         </div>
@@ -398,6 +493,7 @@ export function AddUnitForm( props ) {
                 onChange={(e) => setSearch(e.currentTarget.value)}
                 value={search}
                 autoFocus
+                ref={autofocus}
               />
             </label>
         </div>
@@ -474,91 +570,48 @@ export function AddUnitForm( props ) {
         <table className="table">
           <thead>
             <tr>
-              <th onClick={(e) => handleSort('Name')} className={searchSort === "Name" ? sortAsc ? 'active' : 'active desc' : ''}>Name</th>
-              <th onClick={(e) => handleSort('Rules')} className={searchSort === "Rules" ? sortAsc ? 'active' : 'active desc' : ''}>Rules</th>
-              <th onClick={(e) => handleSort('Technology.Name')} className={searchSort === "Technology.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Tech</th>
-              <th onClick={(e) => handleSort('EraStart')} className={searchSort === "EraStart" ? sortAsc ? 'active' : 'active desc' : ''}>Era</th>
-              <th onClick={(e) => handleSort('BFType')} className={searchSort === "BFType" ? sortAsc ? 'active' : 'active desc' : ''}>Type</th>
-              <th onClick={(e) => handleSort('BFPointValue')} className={searchSort === "BFPointValue" ? sortAsc ? 'active' : 'active desc' : ''}>Points</th>
-              <th onClick={(e) => handleSort('Role.Name')} className={searchSort === "Role.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Role</th>
+              <th><a href="#" onClick={(e) => handleSort('Name')} className={searchSort === "Name" ? sortAsc ? 'active' : 'active desc' : ''}>Name</a></th>
+              <th><a href="#" onClick={(e) => handleSort('Rules')} className={searchSort === "Rules" ? sortAsc ? 'active' : 'active desc' : ''}>Rules</a></th>
+              <th><a href="#" onClick={(e) => handleSort('Technology.Name')} className={searchSort === "Technology.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Tech</a></th>
+              <th><a href="#" onClick={(e) => handleSort('EraStart')} className={searchSort === "EraStart" ? sortAsc ? 'active' : 'active desc' : ''}>Era</a></th>
+              <th><a href="#" onClick={(e) => handleSort('BFType')} className={searchSort === "BFType" ? sortAsc ? 'active' : 'active desc' : ''}>Type</a></th>
+              <th><a href="#" onClick={(e) => handleSort('Role.Name')} className={searchSort === "Role.Name" ? sortAsc ? 'active' : 'active desc' : ''}>Role</a></th>
+              <th><a href="#" onClick={(e) => handleSort('BFPointValue')} className={searchSort === "BFPointValue" ? sortAsc ? 'active' : 'active desc' : ''}>Points</a></th>
             </tr>
           </thead>
+        </table>
 
-          {isSearching ? (
-            <tbody>
-              <tr>
-                <td className="text-center" colSpan={7}>
-                  <div className="text-muted">
-                    <div className="spinner-border spinner-border-sm me-2" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    Searching Master Unit List...
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          ) : searchResults.length > 0 ? (
-            <>
+          {searchResults.length > 0 ? (
+            <ul className="units">
               {searchResults.map( (asUnit, unitIndex) => {
-
+                let unit = convertUnit(asUnit);
                 return (
-                  <tbody key={unitIndex}>
-                    <tr>
-                      <td>{asUnit.Name} <a href="#" onClick={(e) => handleAddUnit(e, props.campaignId, asUnit)}>Add Unit</a></td>
-                      <td>{asUnit.Rules}</td>
-                      <td>{asUnit.Technology.Name}</td>
-                      <td>{getMULEraLabel(asUnit.EraId)}</td>
-                      <td>{asUnit.BFType}</td>
-                      <td>{asUnit.BFPointValue}</td>
-                      <td className=" text-left">{asUnit.Role.Name}</td>
-                    </tr>
-                    <tr>
-                      <td colSpan={7} className=" text-left">
-                        <strong title="Move">MV</strong>: {asUnit.BFMove}
-                        &nbsp;|&nbsp;<strong title="Armor/Internal Structure values">A/IS</strong>: {asUnit.BFArmor}/{asUnit.BFStructure}
-                        &nbsp;|&nbsp;<strong title="Alpha Strike Damage Bands">Damage</strong>: {asUnit.BFDamageShort}/{asUnit.BFDamageMedium}/{asUnit.BFDamageLong}
-                        {asUnit.BFOverheat  && asUnit.BFOverheat > 0 ? (
-                          <>
-                          &nbsp;|&nbsp;<strong title="Overheat Value">OHV</strong>: {asUnit.BFOverheat}
-                          </>
-                        ) : null}
-                        {asUnit.BFAbilities && asUnit.BFAbilities.trim() ? (
-                          <>
-                            &nbsp;|&nbsp;<strong title="Special Abilities">Special</strong>: {asUnit.BFAbilities}
-                          </>
-                        ) : null}
-
-                      </td>
-                    </tr>
-                  </tbody>
+                  <Fragment key={unitIndex} >
+                    <UnitWide unit={unit} className={selectedUnit == asUnit ? 'active' : null} onClick={(e) => handleSelection(e, asUnit)}/>
+                  </Fragment>
                 )
               })}
-            </>
-          ) : (
-            <>
-            {search.length < 3 ? (
-              <tbody>
-                <tr>
-                  <td className="text-center" colSpan={7}>
-                    Please type a search term 3 or more characters.
-                  </td>
-                </tr>
-              </tbody>
-            ) : (
-              <tbody>
-                <tr>
-                  <td className="text-center" colSpan={7}>
-                    Sorry, there are no matches with those parameters. It is a remote possibility that the MUL is down if other searches don't work.
-                  </td>
-                </tr>
-              </tbody>
-            )}
-            </>
-          )}
+            </ul>
+          ) : null }
 
-        </table></div>
-      </form>
+        </div>
     </Panel>
+      <menu className="actions">
+        <button 
+          type="submit" 
+          value="confirm"
+          disabled={!selectedUnit}
+        >
+          Submit
+        </button>
+        <button
+          type="reset"
+          onClick={(e) => handleClose(e)}
+        >
+          Cancel
+        </button>
+      </menu>
+    </form>
   </>
 
 }

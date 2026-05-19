@@ -2,6 +2,7 @@ import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore } from "firebase/firestore";
 import { getSorties } from "@/src/components/sorties/actions";
 import { AddSortieForm } from "@/src/components/sorties/sorties";
+import Dialog from "@/src/components/ui/dialog/dialog";
 
 export default async function Page(props) {
   const params = await props.params;
@@ -13,11 +14,8 @@ export default async function Page(props) {
   );
   
   return (
-    <>
-      <div className="shim"></div>
-      <dialog open={true}>
-        <AddSortieForm campaignId={params.id} sorties={sorties} />
-      </dialog>
-    </>
+    <Dialog>
+      <AddSortieForm campaignId={params.id} sorties={sorties} />
+    </Dialog>
   );
 }

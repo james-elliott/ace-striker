@@ -1,8 +1,9 @@
 "use server";
 
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { getFirestore, collection, addDoc, query, getDocs } from "firebase/firestore";
-import { redirect } from "next/navigation";
+import { getFirestore, collection, addDoc, query, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { convertUnit } from "./utils";
+import { db } from "@/src/lib/firebase/clientApp";
 
 // Save unit to campaign force
 export async function addUnit(campaignId, unitData) {
@@ -22,62 +23,7 @@ export async function addUnit(campaignId, unitData) {
   }
 
   // Create the unit object
-  const newUnit = {
-    name: unitData.Name,
-    class: unitData.Class,
-    variant: unitData.Variant,
-    pv: unitData.BFPointValue,
-    type: unitData.BFType,
-    movement: [],
-    size: unitData.BFSize,
-    imageURL: unitData.ImageUrl,
-    armor: unitData.BFArmor,
-    structure: unitData.BFStructure,
-    damage: [
-        { range: 'short', value: unitData.BFDamageShort, minimal: unitData.BFDamageShortMin ? true : false },
-        { range: 'medium',value: unitData.BFDamageMedium, minimal: unitData.BFDamageMediumMin ? true : false },
-        { range: 'long',value: unitData.BFDamageLong, minimal: unitData.BFDamageLongMin ? true : false },
-        { range: 'extreme',value: unitData.BFDamageExtreme, minimal: unitData.BFDamageExtremeMin ? true : false },
-    ],
-    overheat: unitData.BFOverheat,
-    abilities: [],
-    mulID: unitData.Id,
-    role: unitData.Role.Name,
-  }
-
-  if (unitData.BFAbilities) {
-    let matches = unitData.BFAbilities.match(/([^,(]+(\(.*?\))*)+/g);
-    if (!matches) {
-      newUnit.abilities = [];
-    } else {
-      for( let ability of matches ) {
-        newUnit.abilities.push(ability.trim());
-      }
-    }
-  }
-
-  let moves = unitData.BFMove.replaceAll('"','');
-  moves = moves.split('/');
-
-  for (let move of moves) {
-    let dist = parseInt(move.replace(/\D/g,''));
-    let type = move.replace(/\d/g,'');
-    type = type ? type : 'g';
-    newUnit.movement.push({ move: dist, type: type})
-  }
-  if (newUnit.movement.length == 1 && newUnit.movement[0].type == 'j') {
-    newUnit.movement.unshift({ move: newUnit.movement[0].move, type: 'g'});
-  }
-  
-  
-  if (!['AF','DA','DS','SC'].includes(newUnit.type)) {
-    // This is NOT an air unit
-    newUnit.isGround = true;
-  }
-  
-//   console.log("unitData", unitData);
-//   console.log("newUnit", newUnit);
-//   console.log('moves & movement', moves, movement);
+  const newUnit = convertUnit(unitData);
 
   // Write to the campaign's unit collection
   try {
@@ -88,6 +34,20 @@ export async function addUnit(campaignId, unitData) {
     console.error("Error adding document: ", e);
   }
 //   redirect(`/campaign/` + campaignId + `/roster`);
+}
+
+export async function removeUnit(campaignId, unit) {
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const db = getFirestore(firebaseServerApp);
+
+  try {
+    const docRef = doc(db, 'campaigns', campaignId, 'units', unit.id);
+    await deleteDoc(docRef);
+  } catch (e) {
+    console.log("There was an error deleting this unit");
+    console.error("Error deleting document: ", e);
+  }
+
 }
 
 export async function getUnits(db = db, campaignId, userId) {

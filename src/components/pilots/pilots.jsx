@@ -57,7 +57,7 @@ export function Pilot(pilot) {
         <div className="expand">
           <div className="row">
             <div><span className="class" title={pilot.name}>{pilot.callsign}</span></div>
-            <span className="stat">Type: <em>{pilot.type}</em></span>
+            <StatPair label="Type" values={pilot.type}/>
           </div>
           <div className="row">
             <StatBox label="Skill">{pilot.skill}</StatBox>
@@ -67,9 +67,9 @@ export function Pilot(pilot) {
         </div>
       </div>
       <div className="row">
-        <span className="stat">Total SP: <em>{pilot.pilotSP}</em></span>
-        <span className="stat">MVPs: <em>{pilot.mvp}</em></span>
-        <StatPair label="Status" values={ pilot.status }/>
+        <StatPair label="Total SP" values={pilot.pilotSP}/>
+        <StatPair label="MVPs" values={pilot.mvp}/>
+        <StatPair label="Status" values={pilot.status}/>
       </div>
       <div className="abilities">
         {abilities}
@@ -151,10 +151,10 @@ export function getPilotTokens(pilot) {
 
 
 // Add pilot form
-export function AddPilotForm( props ) {
+export function AddPilotForm( {campaignId} ) {
   const { register } = useForm();
   const router = useRouter();
-  const addPilotToCampaign = addPilot.bind(null, props.campaignId);
+  const addPilotToCampaign = addPilot.bind(null, campaignId);
 
   const [abilityCount, setAbilityCount] = useState(0);
   const [pilotSP, setPilotSP] = useState(150);

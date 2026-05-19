@@ -1,7 +1,13 @@
 import "./stats.css";
 
 export function StatPair({label, values = []}) {
-  return <span className="stat">{label}: <em>{values}</em></span>;
+  return (
+    <span className="stat">{label}&nbsp; 
+      {values.map ? values.map((value, index) => (
+        <em key={index}>{value}</em> 
+      )) : <em>{values}</em> }
+    </span>
+  );
 }
 
 export function StatBox( {label, children }) {

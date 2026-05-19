@@ -9,7 +9,6 @@ import {
 import { setCookie, deleteCookie } from "cookies-next";
 import { getCampaignsSnapshot } from "../../campaign/campaign";
 import './header.css';
-import { useSelectedLayoutSegments } from "next/navigation";
 
 function useUserSession(initialUser) {
   useEffect(() => {

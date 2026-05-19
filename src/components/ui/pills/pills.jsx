@@ -1,5 +1,5 @@
 import "./pills.css";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 export function PillInput( { id, onUpdate, selected, options, optionsCB, showAll = false } ) {
   const [search, setSearch] = useState('');
@@ -32,8 +32,8 @@ export function PillInput( { id, onUpdate, selected, options, optionsCB, showAll
     }
     
     let newSelections = [];
-    for (let faction of selected) {
-      newSelections.push(faction);
+    for (let option of selected) {
+      newSelections.push(option);
     }
     newSelections.push( optionID );
     onUpdate(newSelections);
@@ -41,7 +41,7 @@ export function PillInput( { id, onUpdate, selected, options, optionsCB, showAll
 
   const removeSelected = ( optionID ) => {
     pillSearch.current.focus();
-    let newSelections = selected.filter( (faction) => faction !== optionID );
+    let newSelections = selected.filter( (option) => option !== optionID );
     onUpdate(newSelections);
   }
   

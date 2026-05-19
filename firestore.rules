@@ -25,6 +25,7 @@ service cloud.firestore {
       allow read: if allowedUser();
       allow create: if allowedUser();
       allow update: if allowedUser();
+      allow delete: if allowedUser();
       match /users/{userId} {
         allow create: if allowedUser();
       }
@@ -32,16 +33,19 @@ service cloud.firestore {
         allow read: if allowedUser();
         allow create: if allowedUser();
         allow update: if allowedUser();
+        allow delete: if allowedUser();
       }
       match /units/{unitId} {
         allow read: if allowedUser();
         allow create: if allowedUser();
         allow update: if allowedUser();
+        allow delete: if allowedUser();
       }
       match /sorties/{sortieId} {
         allow read: if allowedUser();
         allow create: if allowedUser();
         allow update: if allowedUser();
+        allow delete: if allowedUser();
       }
     }
     

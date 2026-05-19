@@ -1,15 +1,14 @@
 import { AddUnitForm } from "@/src/components/units/units";
-import React from "react";
+import Dialog from "@/src/components/ui/dialog/dialog";
 
 export default async function Page(props) {
   const params = await props.params;
   
   return (
     <>
-      <div className="shim"></div>
-      <dialog open={true}>
+      <Dialog>
         <AddUnitForm campaignId={params.id} />
-      </dialog>
+      </Dialog>
     </>
   );
 }
