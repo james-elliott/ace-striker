@@ -59,7 +59,7 @@ ul {
 }
 
 h1 {
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 h2 {
@@ -104,6 +104,7 @@ button,
   transition: all 300ms;
   line-height: 1rem;
   box-shadow: 0 4px 8px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+  align-self: center;
   &:first-of-type:not([type=reset]) {
     --surface: #E7BE1E;
   }
@@ -192,6 +193,24 @@ main.roster > .row {
     &:has( ~ a )::after,
     &:has( ~ button.link )::after {
       content: ', ';
+    }
+    &:before {
+      content: '';
+      position: absolute;
+      top: calc(100% + .125rem);
+      height: .125rem;
+      background: var(--primary-color);
+      left: 50%;
+      right: 50%;
+      transition: all 200ms;
+    }
+    &:hover,
+    &:has( + [popover]:popover-open) {
+      color: color-mix(in srgb, var(--primary-color) 65%, #000 35%);
+      &:before {
+        left: 0;
+        right: 0;
+      }
     }
     &:has( + [popover]:popover-open) {
       color: var(--on-surface);
@@ -368,5 +387,40 @@ table {
   }
   tr:nth-child(odd) td:not(.gap) {
     background: #EAEBED;
+  }
+}
+
+/* Unit & Pilot Actions Styling */
+
+div.unit,
+div.pilot {
+  .actions {
+    position-area: bottom;
+    padding: .75rem 1.25rem;
+    border-radius: .5rem;
+    background: color-mix(in srgb, var(--primary-color) 5%, #fff 95%);
+    border: none;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.15)) drop-shadow(0 1px 3px rgba(0,0,0,.3)); /* 0 4px 8px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3); */
+    transition: all 200ms;
+    overflow: visible;
+    &:before {
+      content: '';
+      display: block;
+      position: absolute;
+      top: -.5rem;
+      bottom: 100%;
+      left: calc(50% - 1.5rem);
+      right: calc(50% - 1.5rem);
+      border-radius: .5rem .5rem 0 0;
+      background: inherit;
+      corner-shape: bevel;
+    }
+  }
+  &:has(.actions) {
+    cursor: pointer;
+    &:hover,
+    &:has(.actions:popover-open) {
+      box-shadow: 0 4px 10px rgba(0,0,0,.25), 0 1px 5px rgba(0,0,0,.4);
+    }
   }
 }

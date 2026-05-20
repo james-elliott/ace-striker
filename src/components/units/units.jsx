@@ -14,7 +14,7 @@ import { PillInput } from "../ui/pills/pills";
 import { useRouter } from "next/navigation";
 import { convertUnit, cachedResults } from "./utils";
 
-export function ForceList({initialUnits, campaignId}) {
+export function ForceList({initialUnits, campaignId, perUnitActions}) {
 
   const [units, setUnits] = useState(initialUnits);
 
@@ -24,20 +24,13 @@ export function ForceList({initialUnits, campaignId}) {
     }, campaignId);
   },[]);
 
-  const removeUnitFromForce = (unit) => {
-    removeUnit(campaignId, unit);
-  }
-
-
   return (
     <>
       <ul className="units">
           {units.length > 0 ? units.map((unit, unitIndex) => {
             return <Unit key={unitIndex} 
               unit={unit} 
-              actions={[
-                {name: 'Remove', cb: removeUnitFromForce}
-              ]}
+              actions={perUnitActions}
               />
           }) : <span>No Units</span> }
       </ul>
@@ -179,18 +172,17 @@ const getUnitAbility = (tag) => {
 }
 
 export function Unit( {unit, onClick, actions = null} ) {
-  const actionHolder = useRef();
-  const actionTarget = useRef();
+  const popover = useRef();
+  const popoverAnchor = useRef();
 
   const handleClick = (e) => {
     if (onClick) {
-      onClick();
-    } else {
-      actionHolder.current.showPopover({source: actionTarget.current});
-    }
+      onClick(e);
+    } 
+    popover.current?.showPopover({source: popoverAnchor.current});
   }
 
-  return <div key={unit.id} className='unit' ref={actionTarget} popoverTarget={unit.id + "-actions"} onClick={(e) => handleClick(e)}>
+  return <div key={unit.id} className='unit' ref={popoverAnchor} popoverTarget={unit.id + "-actions"} onClick={(e) => handleClick(e)}>
     <div className="data">
       <div className="">
         <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
@@ -213,8 +205,8 @@ export function Unit( {unit, onClick, actions = null} ) {
     </div>
     <img src={unit.imageURL} />
     <div className="pv">{unit.pv}</div>
-    {actions?.length > 0 || true ? 
-      <div className="actions" id={unit.id + "-actions"} popover="auto" ref={actionHolder}>
+    {actions?.length > 0 ? 
+      <div className="actions" id={unit.id + "-actions"} popover="auto" ref={popover}>
         {actions.map((action, index) => {
           // Create the actions
           return <button key={index} type="button" onClick={() => action.cb(unit)}>{action.name}</button>
@@ -223,9 +215,18 @@ export function Unit( {unit, onClick, actions = null} ) {
   </div>;
 }
 
-export function UnitWide( {unit, onClick, actions, className} ) {
+export function UnitWide( {unit, onClick, actions = null, className} ) {
+  const popover = useRef();
+  const popoverAnchor = useRef();
 
-  return <div key={unit.id} className={className ? className + " unit wide" : "unit wide"} onClick={onClick ? onClick : null}>
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    } 
+    popover.current?.showPopover({source: popoverAnchor.current});
+  }
+
+  return <div key={unit.id} ref={popoverAnchor} popoverTarget={unit.mulID + "-actions"} className={className ? className + " unit wide" : "unit wide"} onClick={(e) => handleClick(e, unit)}>
     <div className="data">
       <div className="">
         <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
@@ -251,7 +252,13 @@ export function UnitWide( {unit, onClick, actions, className} ) {
       </div>
     </div>
     <img src={unit.imageURL} />
-    <div className="pv">{unit.pv}</div>
+    <div className="pv">{unit.pv}</div>    {actions?.length > 0 ? 
+      <div className="actions" id={unit.mulID + "-actions"} popover="auto" ref={popover}>
+        {actions.map((action, index) => {
+          // Create the actions
+          return <button key={index} type="button" onClick={() => action.cb(unit)}>{action.name}</button>
+        })}
+      </div> : null }
   </div>;
 }
 
@@ -587,7 +594,10 @@ export function AddUnitForm( {campaignId} ) {
                 let unit = convertUnit(asUnit);
                 return (
                   <Fragment key={unitIndex} >
-                    <UnitWide unit={unit} className={selectedUnit == asUnit ? 'active' : null} onClick={(e) => handleSelection(e, asUnit)}/>
+                    <UnitWide unit={unit} 
+                      className={selectedUnit == asUnit ? 'active' : null} 
+                      onClick={(e) => handleSelection(e, asUnit)}
+                      />
                   </Fragment>
                 )
               })}
@@ -602,7 +612,7 @@ export function AddUnitForm( {campaignId} ) {
           value="confirm"
           disabled={!selectedUnit}
         >
-          Submit
+          Add Unit
         </button>
         <button
           type="reset"

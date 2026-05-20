@@ -33,7 +33,6 @@ export async function addUnit(campaignId, unitData) {
     console.log("There was an error adding this unit");
     console.error("Error adding document: ", e);
   }
-//   redirect(`/campaign/` + campaignId + `/roster`);
 }
 
 export async function removeUnit(campaignId, unit) {
@@ -47,7 +46,6 @@ export async function removeUnit(campaignId, unit) {
     console.log("There was an error deleting this unit");
     console.error("Error deleting document: ", e);
   }
-
 }
 
 export async function getUnits(db = db, campaignId, userId) {

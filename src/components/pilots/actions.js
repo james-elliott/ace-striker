@@ -1,19 +1,27 @@
 "use server";
 
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { getFirestore, collection, addDoc, query, getDocs, Timestamp } from "firebase/firestore";
+import { getFirestore, collection, addDoc, query, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { getPilotSkill, getPilotTokens } from "./utils";
 
 export async function addPilot(campaignId, formData) {
-  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
+
+  // Check to make sure we are below the pilot limit
+  const pilots = await getPilots(db, campaignId, currentUser?.uid);
+  if (pilots.length >= 6) {
+    console.log('Only 6 named pilots can be added to a campaign.')
+    return;
+  }
 
   // Create the pilot object
   const newPilot = {
     name: formData.get("name"),
     callsign: formData.get("callsign"),
     type: formData.get("type"),
-    skill: Number(formData.get("skill")),
-    edgeTokens: Number(formData.get("edgeTokens")),
+    skill: getPilotSkill({skillSP: formData.get('skillSP')}),
+    edgeTokens: getPilotTokens({tokenSP: formData.get('tokenSP')}),
     abilities: formData.getAll('abilities'),
     pilotSP: 150,
     pic: formData.get('pic'),
@@ -29,8 +37,23 @@ export async function addPilot(campaignId, formData) {
     const docRef = collection(db, 'campaigns', campaignId, 'pilots');
     await addDoc(docRef, newPilot);
   } catch (e) {
-    console.log("There was an error adding the document");
+    console.log("There was an error adding pilot");
     console.error("Error adding document: ", e);
+  }
+}
+
+export async function removePilot(campaignId, pilot) {
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const db = getFirestore(firebaseServerApp);
+
+  console.log(pilot);
+
+  try {
+    const docRef = doc(db, 'campaigns', campaignId, 'pilots', pilot.id);
+    await deleteDoc(docRef);
+  } catch (e) {
+    console.log("There was an error removing this pilot");
+    console.error("Error deleting document: ", e);
   }
 }
 

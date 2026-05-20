@@ -2,7 +2,7 @@
 
 import { React, useState, useEffect, useRef, Fragment } from "react";
 import { useRouter } from "next/navigation";
-import { addPilot } from "./actions";
+import { addPilot, removePilot } from "./actions";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/src/lib/firebase/clientApp";
 import { useForm } from "react-hook-form"
@@ -11,10 +11,10 @@ import "./pilots.css";
 import { StatPair, StatBox } from "../ui/stats/stats";
 import Panel from "../ui/panel/panel";
 import { SPslider } from "../ui/sliders/sliders";
+import { getPilotSkill, getPilotTokens } from "./utils";
 
 // Pilot Listing
-export function PilotList({initialPilots, campaignId}) {
-
+export function PilotList({initialPilots, campaignId, perPilotActions}) {
   const [pilots, setPilots] = useState(initialPilots);
 
   useEffect(() => {
@@ -25,12 +25,24 @@ export function PilotList({initialPilots, campaignId}) {
 
   return (
     <ul className="pilots">
-      {pilots.length > 0 ? pilots.map((pilot) => Pilot(pilot)) : <span>No Pilots</span> }
+      {pilots.length > 0 ? pilots.map((pilot, pilotIndex) => {
+        return <Pilot key={pilotIndex} pilot={pilot} actions={perPilotActions} />
+      }) : <span>No Pilots</span> }
     </ul>
   );
 }
 
-export function Pilot(pilot) {
+export function Pilot( {pilot, onClick, actions} ) {
+  const popover = useRef();
+  const popoverAnchor = useRef();
+
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    }
+    popover.current.togglePopover({source: popoverAnchor.current});
+  }
+
   let abilities = [];
 
   for (let name of pilot.abilities) {
@@ -49,7 +61,7 @@ export function Pilot(pilot) {
   }
 
   return (
-    <div key={pilot.id} className="pilot">
+    <div key={pilot.id} className="pilot" onClick={actions ? (e) => handleClick(e) : null} ref={popoverAnchor}>
       <div className="row">
         <div className="portrait">
           <img src={pilot.pic ? pilot.pic : '/pilots/001.png'}></img>
@@ -74,6 +86,14 @@ export function Pilot(pilot) {
       <div className="abilities">
         {abilities}
       </div>
+      
+    {actions?.length > 0 ? 
+      <div className="actions" id={pilot.id + "-actions"} popover="auto" ref={popover}>
+        {actions.map((action, index) => {
+          // Create the actions
+          return <button key={index} type="button" onClick={() => action.cb(pilot)}>{action.name}</button>
+        })}
+      </div> : null }
     </div>
   );
 }
@@ -107,44 +127,6 @@ export function getPilotAbility(name) {
   if (CONST_EDGE_ABILITIES[name]) {
     return CONST_EDGE_ABILITIES[name];
   }
-}
-
-export function getPilotSkill(pilot) {
-  let skill = 4;
-  if (pilot.skillSP >= 3400) {
-    skill = 0;
-  } else if (pilot.skillSP >= 1900) {
-    skill = 1;
-  } else if (pilot.skillSP >= 900) {
-    skill = 2;
-  } else if(pilot.skillSP >= 400) {
-    skill = 3;
-  }
-  return skill;
-}
-
-export function getPilotTokens(pilot) {
-  let tokens = 1;
-  if (pilot.tokenSP >= 1100) {
-    tokens = 10;
-  } else if (pilot.tokenSP >= 900) {
-    tokens = 9;
-  } else if (pilot.tokenSP >= 720) {
-    tokens = 8;
-  } else if (pilot.tokenSP >= 560) {
-    tokens = 7;
-  } else if (pilot.tokenSP >= 420) {
-    tokens = 6;
-  } else if (pilot.tokenSP >= 300) {
-    tokens = 5;
-  } else if (pilot.tokenSP >= 200) {
-    tokens = 4;
-  } else if (pilot.tokenSP >= 120) {
-    tokens = 3;
-  } else if (pilot.tokenSP >= 60) {
-    tokens = 2;
-  }
-  return tokens;
 }
 
 // Get Pilots
@@ -370,7 +352,7 @@ export function AddPilotForm( {campaignId} ) {
           value="confirm"
           disabled={pilotSP !== skillSP + tokenSP + abilitySP}
         >
-          Submit
+          Add Pilot
         </button>
         <button
           type="reset"

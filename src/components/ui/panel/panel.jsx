@@ -15,7 +15,7 @@ export default function Panel( {children, title, action, style} ) {
         { action }
       </div> : null }
       <div className="content">
-        {children}
+        { children }
       </div>
     </div>
   );
