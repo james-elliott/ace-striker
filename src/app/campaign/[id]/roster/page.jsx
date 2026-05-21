@@ -5,8 +5,9 @@ import { PilotList } from "@/src/components/pilots/pilots";
 import { getPilots, removePilot } from "@/src/components/pilots/actions";
 import { getUnits, removeUnit } from "@/src/components/units/actions";
 import { ForceList } from "@/src/components/units/units";
-import { getCampaignById } from "@/src/components/campaign/actions";
+import { getCampaignById, startCampaign } from "@/src/components/campaign/actions";
 import Panel from "@/src/components/ui/panel/panel";
+import { CampaignBanner } from "@/src/components/campaign/campaign";
 
 export default async function Page(props) {
     const params = await props.params;
@@ -31,13 +32,10 @@ export default async function Page(props) {
 
     return (
         <main className="roster">
-            {campaign.status === 'preparing' ? <div className="row">
-                <h1>Add units and pilots to start the campaign</h1>
-                <button type="button" disabled={initialPilots.length < 2 || initialUnits.length < 1}>Start Campaign</button>
-            </div> : null }
+            <CampaignBanner campaign={campaign} campaignId={params.id} initialPilots={initialPilots} initialUnits={initialUnits} />
             <div className="row">
                 <Panel title="Units" 
-                    action={<Link href="roster/addUnit">Add Unit</Link>} 
+                    action={campaign.currentPV && campaign.currentPV > 0 ? <Link href="roster/addUnit">Add Unit</Link> : <button type="button" disabled={true} title="No more PV to spend on units">Add Unit</button>} 
                     style={{'--primary-color' : '#636466', flexGrow: 1}}>
                     <ForceList
                         initialUnits={initialUnits}

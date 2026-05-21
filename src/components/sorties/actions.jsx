@@ -1,7 +1,7 @@
 "use server";
 
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { getFirestore, collection, addDoc, query, getDocs, Timestamp } from "firebase/firestore";
+import { getFirestore, collection, addDoc, query, getDocs, Timestamp, doc, getDoc } from "firebase/firestore";
 
 export async function addSortie(campaignId, formData) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
@@ -25,13 +25,9 @@ export async function addSortie(campaignId, formData) {
   }
 }
 
-export async function getSorties(db = db, campaignId, userId) {
+export async function getSorties(db = db, campaignId) {
   if (campaignId == null) {
     console.log('Error: No campaign id');
-    return;
-  }
-  if (userId == null) {
-    console.log('Error: No user id provided to getPilots');
     return;
   }
   let q = query(collection(db, "campaigns", campaignId, "sorties"));
@@ -45,4 +41,25 @@ export async function getSorties(db = db, campaignId, userId) {
       date: doc.data().date.toDate(),
     };
   });
+}
+
+export async function getSortieById(db, campaignId, sortieId) {
+  if (campaignId == null) {
+    console.log('getSortie Error: No campaign id');
+    return;
+  }
+  if (sortieId == null) {
+    console.log('getSortie Error: No sortie id');
+    return;
+  }
+
+  const docRef = doc(db, "campaigns", campaignId, "sorties", sortieId);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.data()) {
+    return {
+      ...docSnap.data(),
+    }
+  } else {
+    return;
+  }
 }

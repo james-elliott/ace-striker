@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import "./sorties.css";
 import { db } from "@/src/lib/firebase/clientApp";
 import { query, collection, onSnapshot } from "firebase/firestore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 
 // Get Sorties
@@ -33,6 +34,28 @@ export function getSortiesSnapshot(cb, campaignId) {
     });
 
     cb(results);
+  });
+}
+
+export function getSortieSnapshotById(cb, campaignId, sortieId) {
+  if (typeof cb !== "function") {
+    console.log("Error: The callback parameter is not a function");
+    return;
+  }
+  if (campaignId == null) {
+    console.log('no campaignId to get sortie');
+    return;
+  }
+  if (sortieId == null) {
+    console.log('no sortieId to get sortie');
+    return;
+  }
+
+  const docRef = doc(db, "campaigns", campaignId, "sorties", sortieId);
+  return onSnapshot(docRef, (docSnap) => {
+    cb({
+      ...docSnap.data(),
+    });
   });
 }
 
@@ -101,7 +124,7 @@ export function SortieTable( {initialSorties, campaignId} ) {
       <tr key={sortie.id}>
         <td className="right">{sortie.date.toLocaleDateString()}</td>
         <td className="right">{sortie.number}</td>
-        <td>{sortie.name}</td>
+        <td><Link href={`/campaign/${campaignId}/sortie/${sortie.id}`}>{sortie.name}</Link></td>
         <td>{sortie.status}</td>
         <td className="gap"></td>
         <td>{sortie.earnings}</td>
@@ -146,10 +169,15 @@ export function AddSortieForm( props ) {
   const { register } = useForm();
   const router = useRouter();
   const addSortieToCampaign = addSortie.bind(null, props.campaignId);
+  const autofocus = useRef();
 
   const handleClose = (e) => {
     router.back();
   };
+
+    useEffect(() => {
+  autofocus.current.focus();
+  }, []);
 
   return (
     <form
@@ -175,6 +203,7 @@ export function AddSortieForm( props ) {
               {...register('name')}
               required
               autoFocus
+              ref={autofocus}
             />
           </div>
         </div>

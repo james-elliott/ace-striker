@@ -105,6 +105,7 @@ button,
   line-height: 1rem;
   box-shadow: 0 4px 8px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
   align-self: center;
+  white-space: nowrap;
   &:first-of-type:not([type=reset]) {
     --surface: #E7BE1E;
   }
@@ -114,7 +115,10 @@ button,
   }
   &:disabled {
     opacity: .4;
-    pointer-events: none;
+    &:hover {
+      background: var(--surface);
+      box-shadow: 0 4px 8px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+    }
   }
   &.link {
     text-transform: capitalize;
@@ -148,7 +152,7 @@ main {
   }
 }
 
-main.roster > .row {
+main > .row {
   gap: 2rem;
 }
 
@@ -416,7 +420,8 @@ div.pilot {
       corner-shape: bevel;
     }
   }
-  &:has(.actions) {
+  &:has(.actions),
+  &.clickable {
     cursor: pointer;
     &:hover,
     &:has(.actions:popover-open) {

@@ -1,8 +1,5 @@
 "use client";
 
-// This components handles the Campaign objects
-// It receives data from src/app/page.jsx, such as the initial campaigns and search params from the URL
-
 import Link from "next/link";
 import { React, useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,22 +7,17 @@ import {
   collection,
   onSnapshot,
   query,
-  getDocs,
   doc,
-  getDoc,
-  updateDoc,
-  orderBy,
-  Timestamp,
-  runTransaction,
   where,
-  addDoc,
-  getFirestore,
 } from "firebase/firestore";
-import { db, auth } from "@/src/lib/firebase/clientApp";
-import { addCampaign } from "./actions.js";
+import { db } from "@/src/lib/firebase/clientApp";
+import { addCampaign, startCampaign } from "./actions.js";
 import "./campaign.css";
 import Panel from "../ui/panel/panel.jsx";
-import { getSortiesSnapshot, SortieTable } from "../sorties/sorties.jsx";
+import { SortieTable } from "../sorties/sorties.jsx";
+import { getPilots } from "../pilots/actions.js";
+import { getPilotsSnapshot } from "../pilots/pilots.jsx";
+import { getUnitsSnapshot } from "../units/units.jsx";
 
 export function CampaignList({initialCampaigns, initialUser}) {
   
@@ -44,7 +36,7 @@ export function CampaignList({initialCampaigns, initialUser}) {
       <ul className="campaigns">
         {campaigns.length > 0 ? campaigns.map((campaign) => (
           <li key={campaign.id}>
-            <Link href={`/campaign/${campaign.id}`}>
+            <Link href={campaign.status == 'preparing' ? `/campaign/${campaign.id}/roster` : `/campaign/${campaign.id}`}>
               {campaign.name}
             </Link>
           </li>
@@ -57,6 +49,68 @@ export function CampaignList({initialCampaigns, initialUser}) {
       </Link>
     </>
   );
+}
+
+export function Campaign({
+  campaignId,
+  initialSorties,
+}) {
+
+  return (
+    <Panel title="Campaign Sorties" action={<Link href={`/campaign/${campaignId}/addSortie`}>Add Sortie</Link>}>
+      <div className="row">
+        <SortieTable initialSorties={initialSorties} campaignId={campaignId} />
+      </div>
+    </Panel>
+  );
+}
+
+export function CampaignBanner({campaign, campaignId, initialPilots, initialUnits}) {
+  const [pilots, setPilots] = useState(initialPilots);
+  const [units, setUnits] = useState(initialUnits);
+
+  useEffect(() => {
+    return getPilotsSnapshot((data) => {
+      setPilots(data);
+    }, campaignId);
+  },[]);
+
+  useEffect(() => {
+    return getUnitsSnapshot((data) => {
+      setUnits(data);
+    }, campaignId);
+  },[]);
+
+  if (campaign.status == 'preparing') {
+    const disabled = pilots.length < 2 || units.length < 1;
+    return (
+      <div className="row">
+        <h1>Add units and pilots to start the campaign</h1>
+        <button type="button" onClick={() => startCampaign(campaign, campaignId)} disabled={disabled} title={disabled ? "Campaigns need at least 1 unit and 2 pilots to start" : null}>Start Campaign</button>
+      </div>
+    );
+  }
+  
+  return null;
+}
+
+export function CampaignResources( {initialCampaign, campaignId} ) {
+
+  const [campaign, setCampaign] = useState(initialCampaign);
+
+  useEffect(() => {
+    return getCampaignSnapshotById((data) => {
+      setCampaign(data);
+    }, campaignId);
+  },[]);
+
+
+  let resource = campaign.status == 'preparing' ? 
+    "Remaining PV for starting units: " + (campaign.currentPV >= 0 ? campaign.currentPV : campaign.startingPV)
+    : 
+    "SP: " + (campaign.currentSP >= 0 ? campaign.currentSP : campaign.startingSP);
+  
+    return <div id="sp-display">{resource}</div>;
 }
 
 export function getCampaignsSnapshot(cb, uid) {
@@ -85,22 +139,7 @@ export function getCampaignsSnapshot(cb, uid) {
   });
 }
 
-export function Campaign({
-  campaignId,
-  initialSorties,
-  children,
-}) {
-
-  return (
-    <Panel title="Campaign Sorties" action={<Link href={`/campaign/${campaignId}/addSortie`}>Add Sortie</Link>}>
-      <div className="row">
-        <SortieTable initialSorties={initialSorties} campaignId={campaignId} />
-      </div>
-    </Panel>
-  );
-}
-
-export function getCampaignSnapshotById(campaignId, cb) {
+export function getCampaignSnapshotById(cb, campaignId) {
   if (!campaignId) {
     console.log("Error: Invalid Campaign ID received in getCampaignSnapshotById: ", campaignId);
     return;
@@ -115,7 +154,6 @@ export function getCampaignSnapshotById(campaignId, cb) {
   return onSnapshot(docRef, (docSnap) => {
     cb({
       ...docSnap.data(),
-      // timestamp: docSnap.data().timestamp.toDate(),
     });
   });
 }

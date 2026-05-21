@@ -46,8 +46,6 @@ export async function removePilot(campaignId, pilot) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
-  console.log(pilot);
-
   try {
     const docRef = doc(db, 'campaigns', campaignId, 'pilots', pilot.id);
     await deleteDoc(docRef);
@@ -57,13 +55,9 @@ export async function removePilot(campaignId, pilot) {
   }
 }
 
-export async function getPilots(db = db, campaignId, userId) {
+export async function getPilots(db = db, campaignId) {
   if (campaignId == null) {
     console.log('Error: No campaign id');
-    return;
-  }
-  if (userId == null) {
-    console.log('Error: No user id provided to getPilots');
     return;
   }
   let q = query(collection(db, "campaigns", campaignId, "pilots"));

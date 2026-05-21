@@ -1,4 +1,4 @@
-ul.units {
+.units {
   --primary-color: #0072B3;
   display: flex;
   flex-direction: row;
@@ -34,6 +34,9 @@ div.unit {
       img {
         margin-left: 2rem;
       }
+    }
+    &.disabled {
+      opacity: .3;
     }
     .data {
       flex-grow: 1;
@@ -140,13 +143,16 @@ form.unit {
       }
     }
   }
-  ul.units {
+  div.units {
     padding-top: 1rem;
     max-height: 60vh;
     overflow-y: auto;
+    .unit {
+      margin: 0;
+    }
   }
 }
 
-dialog form.unit ul.units {
+dialog form.unit div.units {
   max-height: 40vh;
 }

@@ -5,6 +5,7 @@ import { getFirestore, setDoc } from "firebase/firestore";
 import { doc, collection, runTransaction, Timestamp, addDoc, query, getDocs, where, getDoc } from "firebase/firestore";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { updateCurrentUser } from "firebase/auth";
 
 export async function addCampaign(initiatalState, formData) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
@@ -19,15 +20,14 @@ export async function addCampaign(initiatalState, formData) {
     difficulty: Number(formData.get("difficulty")),
     status: 'preparing',
   }
+  newCampaign.currentPV = newCampaign.startingPV;
+  newCampaign.currentSP = newCampaign.startingSP;
   let docRef = {};
   try {
     docRef = await addDoc(
       collection(db, "campaigns"),
       newCampaign
     );
-    
-    // await setDoc(doc(db, "campaigns", docRef.id, "users", formData.get("userId")), {});
-    // await addDoc(collection(db, "campaigns", docRef.id, "users"), {userId: formData.get("userId")});
 
   } catch (e) {
     console.log("There was an error adding the document");
@@ -37,6 +37,25 @@ export async function addCampaign(initiatalState, formData) {
     revalidatePath('/');
     redirect('/campaign/' + docRef.id + '/roster');
   }
+}
+
+export async function startCampaign(campaign, campaignId) {
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const db = getFirestore(firebaseServerApp);
+
+  const campaignUpdate = {status: 'started'}
+  if (campaign.currentPV > 0) {
+    campaignUpdate.currentSP = campaign.startingSP + (campaign.currentPV * 40);
+  }
+
+  try {
+    const campaignRef = doc(db, 'campaigns', campaignId);
+    await setDoc(campaignRef, campaignUpdate, { merge: true });
+  } catch (e) {
+    console.log("There was an error starting the campaign");
+    console.error("Error starting campaign: ", e);
+  }
+  redirect('/campaign/' + campaignId);
 }
 
 export async function getCampaigns(db = db, userId) {

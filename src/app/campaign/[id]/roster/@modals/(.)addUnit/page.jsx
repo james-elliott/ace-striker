@@ -1,14 +1,18 @@
-import { AddUnitForm } from "@/src/components/units/units";
 import Dialog from "@/src/components/ui/dialog/dialog";
+import { AddUnitForm } from "@/src/components/units/units";
+import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp";
+import { getFirestore } from "firebase/firestore";
+import { getCampaignById } from "@/src/components/campaign/actions";
 
 export default async function Page(props) {
   const params = await props.params;
+  const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
+
+  const campaign = await getCampaignById(getFirestore(firebaseServerApp), params.id, currentUser?.uid);
   
   return (
-    <>
-      <Dialog>
-        <AddUnitForm campaignId={params.id} />
-      </Dialog>
-    </>
+    <Dialog>
+      <AddUnitForm campaignId={params.id} initialCampaign={campaign}/>
+    </Dialog>
   );
 }

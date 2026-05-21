@@ -13,6 +13,7 @@ import Panel from "../ui/panel/panel";
 import { PillInput } from "../ui/pills/pills";
 import { useRouter } from "next/navigation";
 import { convertUnit, cachedResults } from "./utils";
+import { getCampaignSnapshotById } from "../campaign/campaign";
 
 export function ForceList({initialUnits, campaignId, perUnitActions}) {
 
@@ -25,16 +26,14 @@ export function ForceList({initialUnits, campaignId, perUnitActions}) {
   },[]);
 
   return (
-    <>
-      <ul className="units">
-          {units.length > 0 ? units.map((unit, unitIndex) => {
-            return <Unit key={unitIndex} 
-              unit={unit} 
-              actions={perUnitActions}
-              />
-          }) : <span>No Units</span> }
-      </ul>
-    </>
+    <div className="units">
+      {units.length > 0 ? units.map((unit, unitIndex) => {
+        return <Unit key={unitIndex} 
+          unit={unit} 
+          actions={perUnitActions}
+          />
+      }) : <span>No Units</span> }
+    </div>
   );
 }
 
@@ -215,7 +214,7 @@ export function Unit( {unit, onClick, actions = null} ) {
   </div>;
 }
 
-export function UnitWide( {unit, onClick, actions = null, className} ) {
+export function UnitWide( {unit, onClick, disabled, actions = null, className} ) {
   const popover = useRef();
   const popoverAnchor = useRef();
 
@@ -226,7 +225,17 @@ export function UnitWide( {unit, onClick, actions = null, className} ) {
     popover.current?.showPopover({source: popoverAnchor.current});
   }
 
-  return <div key={unit.id} ref={popoverAnchor} popoverTarget={unit.mulID + "-actions"} className={className ? className + " unit wide" : "unit wide"} onClick={(e) => handleClick(e, unit)}>
+  const classes = className ? className?.split(' ') : [];
+  classes.push('unit', 'wide');
+  if (disabled) {
+    classes.push('disabled');
+    onClick = false;
+  }
+  if (onClick) {
+    classes.push('clickable');
+  }
+
+  return <div key={unit.id} ref={popoverAnchor} popoverTarget={unit.mulID + "-actions"} title={disabled ? disabled : null} className={classes.join(' ')} onClick={(e) => handleClick(e, unit)}>
     <div className="data">
       <div className="">
         <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
@@ -288,7 +297,7 @@ export function getUnitsSnapshot(cb, campaignId) {
   });
 }
 
-export function AddUnitForm( {campaignId} ) {
+export function AddUnitForm( {campaignId, initialCampaign} ) {
   const router = useRouter();
   const [searchResults, setSearchResults] = useState(cachedResults);
   const [searchSort, setSearchSort] = useState('Name');
@@ -302,6 +311,7 @@ export function AddUnitForm( {campaignId} ) {
   const [type, setType] = useState([18, 19, 21]);
   const [factions, setFactions] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState();
+  const [campaign, setCampaign] = useState(initialCampaign);
   const autofocus = useRef();
 
   let lastSearchId = null;
@@ -357,6 +367,12 @@ export function AddUnitForm( {campaignId} ) {
   useEffect(() => {
     autofocus.current.focus();
   }, []);
+
+  useEffect(() => {
+    return getCampaignSnapshotById((data) => {
+      setCampaign(data);
+    }, campaignId);
+  },[]);
 
   const updateRules = ( event ) => {
     setRules(event.currentTarget.value);
@@ -589,19 +605,19 @@ export function AddUnitForm( {campaignId} ) {
         </table>
 
           {searchResults.length > 0 ? (
-            <ul className="units">
+            <div className="units column">
               {searchResults.map( (asUnit, unitIndex) => {
                 let unit = convertUnit(asUnit);
+                let disabled = campaign.status == 'preparing' ? unit.pv > campaign.currentPV : unit.pv *40 > campaign.currentSP;
                 return (
-                  <Fragment key={unitIndex} >
-                    <UnitWide unit={unit} 
-                      className={selectedUnit == asUnit ? 'active' : null} 
-                      onClick={(e) => handleSelection(e, asUnit)}
-                      />
-                  </Fragment>
+                  <UnitWide unit={unit} key={unitIndex} 
+                    className={selectedUnit == asUnit ? 'active' : null } 
+                    onClick={(e) => handleSelection(e, asUnit)}
+                    disabled={disabled ? 'Not enough resources to add this unit' : false}
+                    />
                 )
               })}
-            </ul>
+            </div>
           ) : null }
 
         </div>
