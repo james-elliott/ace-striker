@@ -1,6 +1,6 @@
 "use client";
 
-import { addSortie, addOpForUnit, removeUnitFromSortie } from "./actions";
+import { addSortie, addOpForUnit, removeUnitFromSortie, addPlayerUnitsToSortie } from "./actions";
 import { useRouter, useParams } from "next/navigation";
 import Panel from "../ui/panel/panel";
 import { useForm } from "react-hook-form";
@@ -12,7 +12,7 @@ import Link from "next/link";
 import { convertUnit, cachedResults } from "../units/utils";
 import { getMULASSearchResults, getMULAerospaceRoles, getMULEraIDs, getMULEraLabel, getMULFactionIDs, getMULFactionLabels, getMULGroundRoles, getMULTypeIDs, getMULTypeLabel } from "@/src/lib/utils/mulUtilities";
 import { PillInput } from "../ui/pills/pills";
-import { Unit, UnitWide } from "../units/units";
+import {  Unit } from "../units/units";
 
 
 // Get Sorties
@@ -254,6 +254,64 @@ export function AddSortieForm( props ) {
   );
 }
 
+export function SelectPlayerUnitsForSortieForm( {campaignId, sortieId, forceUnits, sortieUnits}) {
+  const router = useRouter();
+  const [selectedUnits, setSelectedUnits] = useState(sortieUnits ? sortieUnits : []);
+  
+  const handleSelection = (e, unit) => {
+    if (e.target.tagName == "BUTTON") {
+      console.log('aborting because it\'s a button');
+      return;
+    }
+    let selection = [...selectedUnits];
+    if (selection.some(selectedUnit => selectedUnit.mulID == unit.mulID)) {
+      selection = selection.filter(selected => selected.mulID != unit.mulID);
+    } else {
+      selection.push(unit);
+    }
+    setSelectedUnits(selection);
+  }
+
+  const handleSubmit = (e) => {
+    addPlayerUnitsToSortie(campaignId, sortieId, selectedUnits);
+    handleClose();
+  }
+  const handleClose = (e) => {
+    router.push(`/campaign/${campaignId}/sorties/${sortieId}`);
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <Panel title="Select Units for Sortie">
+        <div className="units">
+          {forceUnits?.length > 0 ? forceUnits.map((unit, unitIndex) => {
+            return <Unit key={unitIndex} 
+              unit={unit} 
+              className={selectedUnits.some(selectedUnit => selectedUnit.mulID == unit.mulID) ? 'active' : '' }
+              onClick={(e)=> handleSelection(e, unit)}
+              />
+          }) : <span>No Units</span> }
+        </div>
+      </Panel>
+      <menu className="actions">
+        <button 
+          type="submit" 
+          value="confirm"
+          disabled={selectedUnits.length < 1}
+        >
+          Add Selected Units
+        </button>
+        <button
+          type="reset"
+          onClick={(e) => handleClose(e)}
+        >
+          Cancel
+        </button>
+      </menu>
+    </form>
+  )
+}
+
 export function AddOpForToSortieForm( {campaignId, sortieId} ) {
   const router = useRouter();
   const [searchResults, setSearchResults] = useState(cachedResults);
@@ -453,7 +511,7 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
 
   return <>
     <form className="unit" action={() => handleSubmit(selectedUnit)}>
-      <Panel title="Add Unit to Force">
+      <Panel title="Add Unit to Sortie OpFor" style={{'--primary-color': "#B82327"}}>
         <div>
           We integrate with the <a href="http://masterunitlist.info/" target="_blank">Master Unit List</a> to make sure that all the stats are as official and as up to date as possible.
         </div>
@@ -558,9 +616,10 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
               {searchResults.map( (asUnit, unitIndex) => {
                 let unit = convertUnit(asUnit);
                 return (
-                  <UnitWide unit={unit} key={unitIndex} 
+                  <unit unit={unit} key={unitIndex} 
                     className={selectedUnit == asUnit ? 'active' : null } 
                     onClick={(e) => handleSelection(e, asUnit)}
+                    wide={true}
                     />
                 )
               })}

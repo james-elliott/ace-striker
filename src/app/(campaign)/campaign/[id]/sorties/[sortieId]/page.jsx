@@ -12,12 +12,15 @@ export default async function Page(props) {
 
   const sortie = await getSortieById(db, params.id, params.sortieId);
 
+  // If the sortie is started, render the play screen
+
+  // If the sortie isn't started, render force selection
   return (
     <main>
       <h1>{sortie.name}</h1>
       <div className="row">
         <Panel title="Player Force"
-          action={true ? <Link href={`${params.sortieId}/addUnits`}>Add Units</Link> : <button type="button" disabled={true} title="No more PV to spend on units">Add Unit</button>} 
+          action={true ? <Link href={`${params.sortieId}/selectUnits`}>Select Units</Link> : <button type="button" disabled={true} title="Player Force is at PV maximum">Select Units</button>} 
           style={{'--primary-color' : '#636466', flexGrow: 1}}>
             <SortieUnitList initialSortie={sortie} force="player" />
           </Panel>
@@ -29,4 +32,5 @@ export default async function Page(props) {
       </div>
     </main>
   );
+  // If the sortie is complete, render the summary of results
 }

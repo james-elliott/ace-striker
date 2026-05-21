@@ -27,6 +27,19 @@ export async function addSortie(campaignId, formData) {
   }
 }
 
+export async function addPlayerUnitsToSortie(campaignId, sortieId, units) {
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const db = getFirestore(firebaseServerApp);
+
+  try {
+    const docRef = doc(db, 'campaigns', campaignId, 'sorties', sortieId);
+    await setDoc(docRef, { player: units }, { merge: true });
+  } catch (e) {
+    console.log("There was an error adding unit to OpFor");
+    console.error("Error adding document: ", e);
+  }
+}
+
 export async function addOpForUnit(campaignId, sortieId, unitData) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
