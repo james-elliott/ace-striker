@@ -176,6 +176,7 @@ export function Unit( {unit, onClick, actions = null} ) {
 
   const handleClick = (e) => {
     if (onClick) {
+      e.target.blur();
       onClick(e);
     } 
     popover.current?.showPopover({source: popoverAnchor.current});
