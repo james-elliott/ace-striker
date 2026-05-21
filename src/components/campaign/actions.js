@@ -2,10 +2,9 @@
 
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore, setDoc } from "firebase/firestore";
-import { doc, collection, runTransaction, Timestamp, addDoc, query, getDocs, where, getDoc } from "firebase/firestore";
+import { doc, collection, Timestamp, addDoc, query, getDocs, where, getDoc } from "firebase/firestore";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { updateCurrentUser } from "firebase/auth";
 
 export async function addCampaign(initiatalState, formData) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
@@ -75,13 +74,9 @@ export async function getCampaigns(db = db, userId) {
   });
 }
 
-export async function getCampaignById(db, campaignId, userId) {
+export async function getCampaignById(db, campaignId) {
   if (!campaignId) {
     console.log("Error: Invalid Campaign ID received to getCampaignById: ", campaignId);
-    return;
-  }
-  if (!userId) {
-    console.log("Error: No userId provided to getCampaignById: ", userId);
     return;
   }
 

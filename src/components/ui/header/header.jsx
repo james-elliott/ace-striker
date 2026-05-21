@@ -7,8 +7,11 @@ import {
   onIdTokenChanged,
 } from "@/src/lib/firebase/auth.js";
 import { setCookie, deleteCookie } from "cookies-next";
-import { getCampaignsSnapshot } from "../../campaign/campaign";
+import { getCampaignSnapshotById, getCampaignsSnapshot } from "../../campaign/campaign";
 import './header.css';
+import { useParams } from "next/navigation";
+import { getCampaignById } from "../../campaign/actions";
+import { db } from "@/src/lib/firebase/clientApp";
 
 function useUserSession(initialUser) {
   useEffect(() => {
@@ -32,13 +35,22 @@ function useUserSession(initialUser) {
 export default function Header({ initialUser, initialCampaigns }) {
   const user = useUserSession(initialUser);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
+  const [campaign, setCampaign] = useState();
   const campaignMenu = useRef();
+  const params = useParams();
 
   useEffect(() => {
     return getCampaignsSnapshot((data) => {
       setCampaigns(data);
     }, user?.uid);
   },[user]);
+
+  useEffect(() => {
+    setCampaign();
+    return getCampaignSnapshotById((data) => {
+      setCampaign(data);
+    }, params.id);
+  },[params.id]);
 
   const handleSignOut = (event) => {
     event.preventDefault();
@@ -74,11 +86,11 @@ export default function Header({ initialUser, initialCampaigns }) {
         </ul>
       </div>
 
-      {/* { campaign ? <span>{campaign.name}</span> : null } */}
+      { campaign ? <span>{campaign.name}</span> : null }
 
       <Link href="/" className="logo">Ace Striker</Link>
 
-      {/* { campaign ? <span>{ campaign.forceName }</span> : null } */}
+      { campaign ? <span>{ campaign.forceName }</span> : null }
 
       <div className="menu">
         <button popoverTarget="user-menu" className="material-symbols-outlined">

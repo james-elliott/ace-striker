@@ -15,7 +15,6 @@ import { addCampaign, startCampaign } from "./actions.js";
 import "./campaign.css";
 import Panel from "../ui/panel/panel.jsx";
 import { SortieTable } from "../sorties/sorties.jsx";
-import { getPilots } from "../pilots/actions.js";
 import { getPilotsSnapshot } from "../pilots/pilots.jsx";
 import { getUnitsSnapshot } from "../units/units.jsx";
 

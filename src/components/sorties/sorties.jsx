@@ -124,7 +124,7 @@ export function SortieTable( {initialSorties, campaignId} ) {
       <tr key={sortie.id}>
         <td className="right">{sortie.date.toLocaleDateString()}</td>
         <td className="right">{sortie.number}</td>
-        <td><Link href={`/campaign/${campaignId}/sortie/${sortie.id}`}>{sortie.name}</Link></td>
+        <td><Link href={`/campaign/${campaignId}/sorties/${sortie.id}`}>{sortie.name}</Link></td>
         <td>{sortie.status}</td>
         <td className="gap"></td>
         <td>{sortie.earnings}</td>
