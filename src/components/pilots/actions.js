@@ -1,22 +1,18 @@
 "use server";
 
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
-import { getFirestore, collection, addDoc, query, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, query, getDocs, doc, setDoc } from "firebase/firestore";
 import { getPilotSkill, getPilotTokens } from "./utils";
+import { generateUUID } from "@/src/lib/utils/generateUUID";
+import { getCampaignById } from "../campaign/actions";
 
 export async function addPilot(campaignId, formData) {
-  const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
-
-  // Check to make sure we are below the pilot limit
-  const pilots = await getPilots(db, campaignId, currentUser?.uid);
-  if (pilots.length >= 6) {
-    console.log('Only 6 named pilots can be added to a campaign.')
-    return;
-  }
 
   // Create the pilot object
   const newPilot = {
+    id: generateUUID(),
     name: formData.get("name"),
     callsign: formData.get("callsign"),
     type: formData.get("type"),
@@ -32,10 +28,21 @@ export async function addPilot(campaignId, formData) {
     mvp: 0,
   }
 
-  // Write to the pilot collection
+    // Check to make sure we are below the pilot limit
+  const campaign = await getCampaignById(db, campaignId);
+  if (!campaign.pilots) {
+    campaign.pilots = [newPilot];
+  } else if (campaign.pilots.length >= 6) {
+    console.log('Only 6 named pilots can be added to a campaign.')
+    return;
+  } else {
+    campaign.pilots.push(newPilot);
+  }
+
+  // Update the campaign
   try {
-    const docRef = collection(db, 'campaigns', campaignId, 'pilots');
-    await addDoc(docRef, newPilot);
+    const docRef = doc(db, 'campaigns', campaignId);
+    await setDoc(docRef, { pilots: campaign.pilots }, { merge: true });
   } catch (e) {
     console.log("There was an error adding pilot");
     console.error("Error adding document: ", e);
@@ -46,9 +53,12 @@ export async function removePilot(campaignId, pilot) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
+  const campaign = await getCampaignById(db, campaignId);
+  const pilots = campaign.pilots.filter(existingPilot => existingPilot.id !== pilot.id);
+
   try {
-    const docRef = doc(db, 'campaigns', campaignId, 'pilots', pilot.id);
-    await deleteDoc(docRef);
+    const docRef = doc(db, 'campaigns', campaignId);
+    await setDoc(docRef, { pilots: pilots }, { merge: true });
   } catch (e) {
     console.log("There was an error removing this pilot");
     console.error("Error deleting document: ", e);

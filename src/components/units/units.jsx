@@ -20,14 +20,14 @@ export function ForceList({initialUnits, campaignId, perUnitActions}) {
   const [units, setUnits] = useState(initialUnits);
 
   useEffect(() => {
-    return getUnitsSnapshot((data) => {
-      setUnits(data);
+    return getCampaignSnapshotById((data) => {
+      setUnits(data.units);
     }, campaignId);
   },[]);
 
   return (
     <div className="units">
-      {units.length > 0 ? units.map((unit, unitIndex) => {
+      {units?.length > 0 ? units.map((unit, unitIndex) => {
         return <Unit key={unitIndex} 
           unit={unit} 
           actions={perUnitActions}

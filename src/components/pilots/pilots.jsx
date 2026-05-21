@@ -12,20 +12,21 @@ import { StatPair, StatBox } from "../ui/stats/stats";
 import Panel from "../ui/panel/panel";
 import { SPslider } from "../ui/sliders/sliders";
 import { getPilotSkill, getPilotTokens } from "./utils";
+import { getCampaignSnapshotById } from "../campaign/campaign";
 
 // Pilot Listing
 export function PilotList({initialPilots, campaignId, perPilotActions}) {
   const [pilots, setPilots] = useState(initialPilots);
 
   useEffect(() => {
-    return getPilotsSnapshot((data) => {
-      setPilots(data);
+    return getCampaignSnapshotById((data) => {
+      setPilots(data.pilots);
     }, campaignId);
   },[]);
 
   return (
     <ul className="pilots">
-      {pilots.length > 0 ? pilots.map((pilot, pilotIndex) => {
+      {pilots?.length > 0 ? pilots.map((pilot, pilotIndex) => {
         return <Pilot key={pilotIndex} pilot={pilot} actions={perPilotActions} />
       }) : <span>No Pilots</span> }
     </ul>

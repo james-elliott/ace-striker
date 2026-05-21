@@ -14,8 +14,6 @@ export default async function Page(props) {
     const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
     const db = getFirestore(firebaseServerApp);
 
-    const initialUnits = await getUnits(db, params.id, currentUser?.uid);
-    let initialPilots = await getPilots(db, params.id, currentUser?.uid);
     const campaign = await getCampaignById(db, params.id, currentUser?.uid);
 
     const removeUnitFromForce = async(unit) => {
@@ -32,23 +30,23 @@ export default async function Page(props) {
 
     return (
         <main className="roster">
-            <CampaignBanner campaign={campaign} campaignId={params.id} initialPilots={initialPilots} initialUnits={initialUnits} />
+            <CampaignBanner initialCampaign={campaign} campaignId={params.id} />
             <div className="row">
                 <Panel title="Units" 
-                    action={campaign.currentPV && campaign.currentPV > 0 ? <Link href="roster/addUnit">Add Unit</Link> : <button type="button" disabled={true} title="No more PV to spend on units">Add Unit</button>} 
+                    action={campaign.currentPV && campaign.currentPV <= 0 ? <button type="button" disabled={true} title="No more PV to spend on units">Add Unit</button> : <Link href="roster/addUnit">Add Unit</Link>} 
                     style={{'--primary-color' : '#636466', flexGrow: 1}}>
                     <ForceList
-                        initialUnits={initialUnits}
+                        initialUnits={campaign.units}
                         campaignId={params.id}
                         campaign={campaign}
                         perUnitActions={unitActions}
                         />
                 </Panel>
                 <Panel title="Pilots" 
-                    action={initialPilots.length < 6 ? <Link href="roster/addPilot">Add Pilot</Link> : <button type="button" disabled={true} title="Only 6 named pilots allowed in a campaign">Add Pilot</button>} 
+                    action={campaign.pilots?.length >= 6 ? <button type="button" disabled={true} title="Only 6 named pilots allowed in a campaign">Add Pilot</button> : <Link href="roster/addPilot">Add Pilot</Link> } 
                     style={{'--primary-color' : '#E0AD2A'}}>
                     <PilotList 
-                        initialPilots={initialPilots}
+                        initialPilots={campaign.pilots}
                         campaignId={params.id}
                         perPilotActions={pilotActions}
                     />

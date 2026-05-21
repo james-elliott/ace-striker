@@ -50,10 +50,7 @@ export function CampaignList({initialCampaigns, initialUser}) {
   );
 }
 
-export function Campaign({
-  campaignId,
-  initialSorties,
-}) {
+export function Campaign( {campaignId, initialSorties} ) {
 
   return (
     <Panel title="Campaign Sorties" action={<Link href={`/campaign/${campaignId}/addSortie`}>Add Sortie</Link>}>
@@ -64,24 +61,22 @@ export function Campaign({
   );
 }
 
-export function CampaignBanner({campaign, campaignId, initialPilots, initialUnits}) {
-  const [pilots, setPilots] = useState(initialPilots);
-  const [units, setUnits] = useState(initialUnits);
+export function CampaignBanner({initialCampaign, campaignId}) {
+  const [campaign, setCampaign] = useState(initialCampaign);
 
   useEffect(() => {
-    return getPilotsSnapshot((data) => {
-      setPilots(data);
+    return getCampaignSnapshotById((data) => {
+      setCampaign(data);
     }, campaignId);
   },[]);
 
-  useEffect(() => {
-    return getUnitsSnapshot((data) => {
-      setUnits(data);
-    }, campaignId);
-  },[]);
+  
 
   if (campaign.status == 'preparing') {
-    const disabled = pilots.length < 2 || units.length < 1;
+    const disabled = !campaign.pilots || campaign.pilots.length < 2 || !campaign.units || campaign.units.length < 1;
+    console.log(disabled);
+    console.log('pilots', campaign.pilots && campaign.pilots.length < 2, campaign.pilots);
+    console.log('units', campaign.units && campaign.units.length < 1, campaign.units);
     return (
       <div className="row">
         <h1>Add units and pilots to start the campaign</h1>
