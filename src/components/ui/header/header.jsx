@@ -10,8 +10,6 @@ import { setCookie, deleteCookie } from "cookies-next";
 import { getCampaignSnapshotById, getCampaignsSnapshot } from "../../campaign/campaign";
 import './header.css';
 import { useParams } from "next/navigation";
-import { getCampaignById } from "../../campaign/actions";
-import { db } from "@/src/lib/firebase/clientApp";
 
 function useUserSession(initialUser) {
   useEffect(() => {

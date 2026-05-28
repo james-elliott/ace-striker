@@ -1,64 +1,81 @@
 .pilots {
-  --primary-color: #B0B093;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  .pilot {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    corner-shape: bevel;
-    border-radius: 0 16px 0 16px;
-    border: 3px solid var(--primary-color);
-    padding: 12px;
-    gap: 12px;
-    margin-bottom: 4px;
-    min-width: 340px;
-    max-width: 380px;
-    box-shadow: inset 0 2px 12px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.15);
-    a {
-      color: var(--primary-color);
-    }
-    .row {
-      gap: 12px;
-    }
-    /* Need to move this elsewhere so it also applies to the new pilot screen
-    .portrait {
-      height: 94px;
-      width: 94px;
-      min-height: 94px;
-      min-width: 94px;
-      corner-shape: bevel;
-      border-radius: 0 0 10px 10px;
-      overflow: hidden;
-      img {
-        background: grey;
-        height: 100%;
-        width: 100%;
-
-        max-height: 100%;
-        max-width: 100%;
-      }
-    } */
-    .expand {
-      display: flex;
-      flex-grow: 1;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    &::after {
-      content: '';
-      display: block;
-      background: var(--primary-color);
-      height: 4px;
-      width: 60px;
-      position: absolute;
-      top: calc(100% - 4px);
-      right: 48px;
-      corner-shape: bevel;
-      border-radius: 4px 4px 0 0;
-    }
+}
+div.pilot {
+  --primary-color: #B0B093;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  corner-shape: bevel;
+  border-radius: 0 16px 0 16px;
+  border: 3px solid var(--primary-color);
+  padding: 12px;
+  gap: 12px;
+  margin-bottom: 4px;
+  min-width: 340px;
+  max-width: 380px;
+  box-shadow: inset 0 2px 12px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.15);
+  a {
+    color: var(--primary-color);
   }
+  .row {
+    gap: 12px;
+  }
+  /* Need to move this elsewhere so it also applies to the new pilot screen
+  .portrait {
+    height: 94px;
+    width: 94px;
+    min-height: 94px;
+    min-width: 94px;
+    corner-shape: bevel;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    img {
+      background: grey;
+      height: 100%;
+      width: 100%;
+
+      max-height: 100%;
+      max-width: 100%;
+    }
+  } */
+  .expand {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  &::after {
+    content: '';
+    display: block;
+    background: var(--primary-color);
+    height: 4px;
+    width: 60px;
+    position: absolute;
+    top: calc(100% - 4px);
+    right: 48px;
+    corner-shape: bevel;
+    border-radius: 4px 4px 0 0;
+  }
+  &.active {
+    --primary-color: #e7be1e;
+  }
+}
+div.mini-pilot {
+  img {
+    max-height: 1.5rem;
+    margin-right: .125rem;
+  }
+  .stat {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  justify-content: start;
+  gap: 2rem;
+  margin-top: .5rem;
 }
 
 /* Pilot add/edit form styling */

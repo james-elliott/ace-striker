@@ -14,23 +14,25 @@ import { PillInput } from "../ui/pills/pills";
 import { useRouter } from "next/navigation";
 import { convertUnit, cachedResults } from "./utils";
 import { getCampaignSnapshotById } from "../campaign/campaign";
+import { PilotMini } from "../pilots/pilots";
 
-export function ForceList({initialUnits, campaignId, perUnitActions}) {
-
-  const [units, setUnits] = useState(initialUnits);
+export function ForceList({campaignId, initialCampaign}) {
+  const [campaign, setCampaign] = useState(initialCampaign);
 
   useEffect(() => {
     return getCampaignSnapshotById((data) => {
-      setUnits(data.units);
+      setCampaign(data);
     }, campaignId);
   },[]);
 
   return (
     <div className="units">
-      {units?.length > 0 ? units.map((unit, unitIndex) => {
+      {campaign.units?.length > 0 ? campaign.units.map((unit, unitIndex) => {
+        const actions = campaign.status == 'preparing' ? [<button key="remove" type="button" onClick={() => removeUnit(campaignId, unit)}>Remove</button>] : null;
+
         return <Unit key={unitIndex} 
           unit={unit} 
-          actions={perUnitActions}
+          actions={actions}
           />
       }) : <span>No Units</span> }
     </div>
@@ -170,7 +172,7 @@ const getUnitAbility = (tag) => {
   return null;
 }
 
-export function Unit( {unit, className, wide = false, onClick, disabled, actions = null} ) {
+export function Unit( {unit, pilot = unit.pilot, className, wide = false, onClick, disabled, actions = null} ) {
   const popover = useRef();
   const popoverAnchor = useRef();
 
@@ -178,8 +180,9 @@ export function Unit( {unit, className, wide = false, onClick, disabled, actions
     if (onClick) {
       e.target.blur();
       onClick(e);
-    } 
-    popover.current?.showPopover({source: popoverAnchor.current});
+    } else if (actions) {
+      popover.current?.showPopover({source: popoverAnchor.current});
+    }
   }
 
   const classes = className ? className?.split(' ') : [];
@@ -195,45 +198,45 @@ export function Unit( {unit, className, wide = false, onClick, disabled, actions
     classes.push('wide');
   }
 
-  return <div key={unit.id} className={classes.join(' ')} ref={popoverAnchor} popoverTarget={unit.id + "-actions"} onClick={(e) => handleClick(e)}>
-    <div className="data">
-      <div className="">
-        <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
+  return <div key={unit.id} className={classes.join(' ')} ref={popoverAnchor} popoverTarget={unit.id + "-actions"} onClick={actions || onClick ? (e) => handleClick(e) : null}>
+    <div className="row">
+      <div className="data">
+        <div className="">
+          <span className="class">{unit.class}</span> <span className="variant">{unit.variant}</span>
+        </div>
+        <div className="row">
+          <StatPair label="Type" values={unit.type} />
+          <StatPair label="MV" values={getMoves(unit)} />
+          <StatPair label="TMM" values={getTMM(unit)} />
+          <StatPair label="Size" values={unit.size} />
+          {wide ? 
+          <>
+            <StatPair label="Role" values={unit.role} />
+            <StatPair label="Tech" values={unit.tech.name} />
+          </> : null }
+        </div>
+        <div className="combat row">
+          {getHealth(unit)}
+          {getDamage(unit)}
+          
+          <StatPair label="OV" values={unit.overheat} />
+          {wide ? 
+          <>
+            <button className="era-icon link" type="button" popoverTargetAction="toggle" popoverTarget={unit.mulID + unit.era.name} title={unit.era.name} style={{backgroundImage: 'url(' + unit.era.iconURL + ')'}}>{unit.era.name}</button>
+            <div popover="auto" id={unit.mulID + unit.era.name}>{unit.era.name}</div>
+          </> : null }
+        </div>
+        <div className="abilities">
+          {getAbilities(unit)}
+        </div>
       </div>
-      <div className="row">
-        <StatPair label="Type" values={unit.type} />
-        <StatPair label="MV" values={getMoves(unit)} />
-        <StatPair label="TMM" values={getTMM(unit)} />
-        <StatPair label="Size" values={unit.size} />
-        {wide ? 
-        <>
-          <StatPair label="Role" values={unit.role.name} />
-          <StatPair label="Tech" values={unit.tech.name} />
-        </> : null }
-      </div>
-      <div className="combat row">
-        {getHealth(unit)}
-        {getDamage(unit)}
-        
-        <StatPair label="OV" values={unit.overheat} />
-        {wide ? 
-        <>
-          <button className="era-icon link" type="button" popoverTargetAction="toggle" popoverTarget={unit.mulID + unit.era.name} title={unit.era.name} style={{backgroundImage: 'url(' + unit.era.iconURL + ')'}}>{unit.era.name}</button>
-          <div popover="auto" id={unit.mulID + unit.era.name}>{unit.era.name}</div>
-        </> : null }
-      </div>
-      <div className="abilities">
-        {getAbilities(unit)}
-      </div>
+      <img src={unit.imageURL} />
     </div>
-    <img src={unit.imageURL} />
+    {pilot ? <PilotMini pilot={pilot} /> : null }
     <div className="pv">{unit.pv}</div>
-    {actions?.length > 0 ? 
+    {actions ? 
       <div className="actions" id={unit.id + "-actions"} popover="auto" ref={popover}>
-        {actions.map((action, index) => {
-          // Create the actions
-          return <button key={index} type="button" onClick={() => action.cb(unit)}>{action.name}</button>
-        })}
+        {actions}
       </div> : null }
   </div>;
 }

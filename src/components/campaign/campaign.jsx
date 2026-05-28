@@ -15,8 +15,6 @@ import { addCampaign, startCampaign } from "./actions.js";
 import "./campaign.css";
 import Panel from "../ui/panel/panel.jsx";
 import { SortieTable } from "../sorties/sorties.jsx";
-import { getPilotsSnapshot } from "../pilots/pilots.jsx";
-import { getUnitsSnapshot } from "../units/units.jsx";
 
 export function CampaignList({initialCampaigns, initialUser}) {
   
@@ -31,7 +29,7 @@ export function CampaignList({initialCampaigns, initialUser}) {
   },[]);
 
   return (
-    <>
+    <div>
       <ul className="campaigns">
         {campaigns.length > 0 ? campaigns.map((campaign) => (
           <li key={campaign.id}>
@@ -46,7 +44,7 @@ export function CampaignList({initialCampaigns, initialUser}) {
         href="/addCampaign">
         New Campaign
       </Link>
-    </>
+    </div>
   );
 }
 
@@ -74,9 +72,6 @@ export function CampaignBanner({initialCampaign, campaignId}) {
 
   if (campaign.status == 'preparing') {
     const disabled = !campaign.pilots || campaign.pilots.length < 2 || !campaign.units || campaign.units.length < 1;
-    console.log(disabled);
-    console.log('pilots', campaign.pilots && campaign.pilots.length < 2, campaign.pilots);
-    console.log('units', campaign.units && campaign.units.length < 1, campaign.units);
     return (
       <div className="row">
         <h1>Add units and pilots to start the campaign</h1>

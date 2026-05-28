@@ -11,7 +11,7 @@ div.unit {
       --primary-color: #E7BE1E;
     }
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     position: relative;
     border: 3px solid var(--primary-color);
     border-top-left-radius: 18px;
@@ -28,6 +28,7 @@ div.unit {
     &.wide {
       max-width: 100%;
       flex-basis: 100%;
+      margin: 0;
       .row {
         justify-content: space-between;
       }

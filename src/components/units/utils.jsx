@@ -29,10 +29,6 @@ export function convertUnit(MULunit) {
       iconURL: MULunit.EraIcon,
       name: getMULEraLabel(MULunit.EraId),
     },
-    role: {
-      id: MULunit.Role.Id,
-      name: MULunit.Role.Name,
-    },
     tech: {
       id: MULunit.Technology.Id,
       name: MULunit.Technology.Name,

@@ -1,6 +1,6 @@
 "use client";
 
-import { addSortie, addOpForUnit, removeUnitFromSortie, addPlayerUnitsToSortie } from "./actions";
+import { addSortie, addOpForUnit, removeUnitFromOpFor, addPlayerUnitsToSortie, removePlayerUnitFromSortie, editOpForUnit, assignPilotToPlayerUnit } from "./actions";
 import { useRouter, useParams } from "next/navigation";
 import Panel from "../ui/panel/panel";
 import { useForm } from "react-hook-form";
@@ -13,6 +13,8 @@ import { convertUnit, cachedResults } from "../units/utils";
 import { getMULASSearchResults, getMULAerospaceRoles, getMULEraIDs, getMULEraLabel, getMULFactionIDs, getMULFactionLabels, getMULGroundRoles, getMULTypeIDs, getMULTypeLabel } from "@/src/lib/utils/mulUtilities";
 import { PillInput } from "../ui/pills/pills";
 import {  Unit } from "../units/units";
+import { getCampaignSnapshotById } from "../campaign/campaign";
+import { Pilot } from "../pilots/pilots";
 
 
 // Get Sorties
@@ -164,28 +166,69 @@ export function SortieTable( {initialSorties, campaignId} ) {
   );
 }
 
-export function SortieUnitList( {initialSortie, force = "player"} ) {
-  const [units, setUnits] = useState(initialSortie[force]);
+function unitsInSortie(units, sortieId) {
+  return units.filter((unit) => unit.sorties ? Object.hasOwn(unit.sorties, sortieId) : false);
+}
+
+export function SortiePlayerUnitList( {forceUnits, sortieId} ) {
+  const params = useParams();
+  const [units, setUnits] = useState(unitsInSortie(forceUnits, sortieId));
+
+  const removePlayerUnit = async(unit) => {
+    removePlayerUnitFromSortie(params.id, sortieId, unit.id);
+  }
+
+  useEffect(() => {
+    return getCampaignSnapshotById((data) => {
+      setUnits(unitsInSortie(data.units, sortieId));
+    }, params.id);
+  },[]);
+
+  return (
+    <div className="units">
+      { units?.length > 0 ? units.map((unit, unitIndex) => {
+        const actions = [
+          <Link key="assign" href={`/campaign/${params.id}/sorties/${sortieId}/assignPilot/${unit.id}`} className="button">Assign Pilot</Link>,
+          <button key="remove" type="button" onClick={() => removePlayerUnit(unit)}>Remove</button>,
+        ];
+
+        return <Unit key={unitIndex} 
+          unit={unit} 
+          actions={actions}
+          pilot={Object.hasOwn(unit.sorties[sortieId], 'id') ? unit.sorties[sortieId] : null}
+          />
+      }) : <>No units in player force</>}
+    </div>
+  );
+}
+
+export function OpForUnitList( {initialSortie} ) {
+  const [units, setUnits] = useState(initialSortie.opfor);
   const params = useParams();
 
-  const removeUnitFromForce = async(unit) => {
-    removeUnitFromSortie(params.id, params.sortieId, unit.id, force);
+  const removeOpForUnit = async(unit) => {
+    removeUnitFromOpFor(params.id, params.sortieId, unit.id);
   }
 
   useEffect(() => {
     return getSortieSnapshotById((data) => {
-      setUnits(data[force]);
+      setUnits(data.opfor);
     }, params.id, params.sortieId);
   },[]);
 
   return (
     <div className="units">
       { units?.length > 0 ? units.map((unit, unitIndex) => {
+        const actions = [
+          <Link key="edit pilot" className="button" href={`/campaign/${params.id}/sorties/${params.sortieId}/editOpFor/${unit.id}`}>Edit Pilot</Link>,
+          <button key="remove" type="button" onClick={() => removeOpForUnit(unit)}>Remove</button>,
+        ];
+        
         return <Unit key={unitIndex} 
           unit={unit} 
-          actions={[{name: 'Remove', cb: removeUnitFromForce}]}
+          actions={actions}
           />
-      }) : <>No {force} units</>}
+      }) : <>No units in OpFor</>}
     </div>
   );
 }
@@ -254,52 +297,53 @@ export function AddSortieForm( props ) {
   );
 }
 
-export function SelectPlayerUnitsForSortieForm( {campaignId, sortieId, forceUnits, sortieUnits}) {
+export function AddPlayerUnitsToSortieForm( {campaignId, sortieId, forceUnits}) {
   const router = useRouter();
-  const [selectedUnits, setSelectedUnits] = useState(sortieUnits ? sortieUnits : []);
-  
+  const units = forceUnits.filter((unit) => unit.sorties ? !Object.hasOwn(unit.sorties, sortieId) : true);
+  const [selectedUnitIDs, setSelectedUnitIDs] = useState([]);
+
   const handleSelection = (e, unit) => {
     if (e.target.tagName == "BUTTON") {
       console.log('aborting because it\'s a button');
       return;
     }
-    let selection = [...selectedUnits];
-    if (selection.some(selectedUnit => selectedUnit.mulID == unit.mulID)) {
-      selection = selection.filter(selected => selected.mulID != unit.mulID);
+    let newSelection = [...selectedUnitIDs];
+    if (newSelection.includes(unit.id)) {
+      newSelection = newSelection.filter(item => item != unit.id);
     } else {
-      selection.push(unit);
+      newSelection.push(unit.id);
     }
-    setSelectedUnits(selection);
+    setSelectedUnitIDs(newSelection);
   }
 
   const handleSubmit = (e) => {
-    addPlayerUnitsToSortie(campaignId, sortieId, selectedUnits);
+    addPlayerUnitsToSortie(campaignId, sortieId, selectedUnitIDs);
     handleClose();
   }
+
   const handleClose = (e) => {
-    router.push(`/campaign/${campaignId}/sorties/${sortieId}`);
+    router.back();
   }
 
   return (
     <form action={handleSubmit}>
-      <Panel title="Select Units for Sortie">
+      <Panel title="Add Units to Sortie">
         <div className="units">
-          {forceUnits?.length > 0 ? forceUnits.map((unit, unitIndex) => {
+          {units?.length > 0 ? units.map((unit, unitIndex) => {
             return <Unit key={unitIndex} 
               unit={unit} 
-              className={selectedUnits.some(selectedUnit => selectedUnit.mulID == unit.mulID) ? 'active' : '' }
+              className={selectedUnitIDs.includes(unit.id) ? 'active' : '' }
               onClick={(e)=> handleSelection(e, unit)}
               />
-          }) : <span>No Units</span> }
+          }) : <span>No additional units available</span> }
         </div>
       </Panel>
       <menu className="actions">
         <button 
           type="submit" 
           value="confirm"
-          disabled={selectedUnits.length < 1}
         >
-          Add Selected Units
+          Add Units
         </button>
         <button
           type="reset"
@@ -616,7 +660,7 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
               {searchResults.map( (asUnit, unitIndex) => {
                 let unit = convertUnit(asUnit);
                 return (
-                  <unit unit={unit} key={unitIndex} 
+                  <Unit unit={unit} key={unitIndex} 
                     className={selectedUnit == asUnit ? 'active' : null } 
                     onClick={(e) => handleSelection(e, asUnit)}
                     wide={true}
@@ -645,4 +689,143 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
       </menu>
     </form>
   </>
+}
+
+export function EditOpForForm( {campaignId, sortieId, unitId, initialUnit}) {
+  const router = useRouter();
+  const [pilot, setPilot] = useState(initialUnit.pilot ? initialUnit.pilot : {skill: 4, behavior: initialUnit.role})
+
+  const updatePilot = (event, attr) => {
+    let newPilot = {...pilot};
+    newPilot[attr] = event.currentTarget.value;
+    setPilot(newPilot);
+  }
+
+  const handleSubmit = (e) => {
+    editOpForUnit(campaignId, sortieId, unitId, pilot);
+    handleClose();
+  }
+  const handleClose = (e) => {
+    router.back();
+  }
+
+  const skillOptions = [];
+  for (let i = 0; i < 9; i++) {
+    skillOptions.push(<option key={i} value={i}>{i}</option>);
+  }
+
+  const roleOptions = [];
+  if (initialUnit.isGround) {
+    getMULGroundRoles().map((role, index) => {
+      roleOptions.push(<option key={index} value={role}>{role}</option>)
+    })
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <Panel title={'Edit ' + initialUnit.name}>
+        <div className="column">
+          <div className="row">
+            <label>Pilot Skill
+              <select
+                value={pilot.skill}
+                onChange={(e) => updatePilot(e, 'skill')}
+                >
+                {skillOptions}
+              </select>
+            </label>
+            <label>Behavior
+              <select
+                value={pilot.behavior}
+                onChange={(e) => updatePilot(e, 'behavior')}
+                >
+                {roleOptions}
+              </select>
+            </label>
+          </div>
+          <Unit unit={initialUnit} pilot={null} wide={true} />
+        </div>
+      </Panel>
+      <menu className="actions">
+        <button 
+          type="submit" 
+          value="confirm"
+        >
+          Save
+        </button>
+        <button
+          type="reset"
+          onClick={(e) => handleClose(e)}
+        >
+          Cancel
+        </button>
+      </menu>
+    </form>
+  )
+}
+
+export function AssignPlayerPilotForm( {campaignId, sortieId, unit, forcePilots}) {
+  const router = useRouter();
+  const [selectedPilot, setSelectedPilot] = useState(unit.sorties[sortieId].pilot);
+  const [forceCommander, setForceCommander] = useState(selectedPilot?.forceCommander);
+  
+  const handleSelection = (e, pilot) => {
+    if (e.target.tagName == "BUTTON") {
+      console.log('aborting because it\'s a button');
+      return;
+    }
+    setSelectedPilot(pilot);
+  }
+
+  const toggleForceCommander = (e) => {
+    setForceCommander(event.target.value);
+  }
+
+  const handleSubmit = (e) => {
+    const finalPilot = selectedPilot;
+    finalPilot.forceCommander = forceCommander;
+    assignPilotToPlayerUnit(campaignId, sortieId, unit.id, selectedPilot);
+    handleClose();
+  }
+  const handleClose = (e) => {
+    router.back();
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <Panel title={"Add Pilot to " + unit.name}>
+        <div className="pilots">
+          {forcePilots?.length > 0 ? forcePilots.map((pilot, pilotIndex) => {
+            return <Pilot key={pilotIndex} 
+              pilot={pilot} 
+              className={selectedPilot && selectedPilot.id == pilot.id ? 'active' : '' }
+              onClick={(e)=> handleSelection(e, pilot)}
+              />
+          }) : <span>No pilots available</span> }
+        </div>
+        <label>Assign to Force Commander role
+          <input 
+            type="checkbox"
+            defaultValue={forceCommander}
+            onChange={toggleForceCommander}
+            />
+        </label>
+      </Panel>
+      <menu className="actions">
+        <button 
+          type="submit" 
+          value="confirm"
+          disabled={!selectedPilot}
+        >
+          Assign Pilot
+        </button>
+        <button
+          type="reset"
+          onClick={(e) => handleClose(e)}
+        >
+          Cancel
+        </button>
+      </menu>
+    </form>
+  )
 }

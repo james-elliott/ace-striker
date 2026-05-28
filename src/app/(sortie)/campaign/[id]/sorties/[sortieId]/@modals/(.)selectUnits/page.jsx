@@ -2,7 +2,7 @@
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp.js";
 import { getFirestore } from "firebase/firestore";
 import { getCampaignById } from "@/src/components/campaign/actions";
-import { SelectPlayerUnitsForSortieForm } from "@/src/components/sorties/sorties";
+import { AddPlayerUnitsToSortieForm } from "@/src/components/sorties/sorties";
 import { getSortieById } from "@/src/components/sorties/actions";
 import Dialog from "@/src/components/ui/dialog/dialog";
 
@@ -16,7 +16,7 @@ export default async function Page(props) {
 
   return (
     <Dialog>
-      <SelectPlayerUnitsForSortieForm forceUnits={campaign.units} sortieUnits={sortie.player} campaignId={params.id} sortieId={params.sortieId} />
+      <AddPlayerUnitsToSortieForm forceUnits={campaign.units} sortieUnits={sortie.player} campaignId={params.id} sortieId={params.sortieId} />
     </Dialog>
   );
 }

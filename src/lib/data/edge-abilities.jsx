@@ -83,4 +83,11 @@ export const CONST_EDGE_ABILITIES = {
         condition: 'After rolling for a Physical or MEL attack',
         description: 'Spend 1 Edge to reroll.'
     },
+    forcecommander: {
+        name: "Force Commander",
+        type: "Special",
+        restrictions: '',
+        condition: 'While the Force Commander is destroyed',
+        description: 'This force receives a -2 penalty to initiative.'
+    },
 }

@@ -15,54 +15,65 @@ import { getPilotSkill, getPilotTokens } from "./utils";
 import { getCampaignSnapshotById } from "../campaign/campaign";
 
 // Pilot Listing
-export function PilotList({initialPilots, campaignId, perPilotActions}) {
-  const [pilots, setPilots] = useState(initialPilots);
+export function PilotList({initialCampaign, campaignId}) {
+  const [campaign, setCampaign] = useState(initialCampaign);
 
   useEffect(() => {
     return getCampaignSnapshotById((data) => {
-      setPilots(data.pilots);
+      setCampaign(data);
     }, campaignId);
   },[]);
 
   return (
     <ul className="pilots">
-      {pilots?.length > 0 ? pilots.map((pilot, pilotIndex) => {
-        return <Pilot key={pilotIndex} pilot={pilot} actions={perPilotActions} />
+      {campaign.pilots?.length > 0 ? campaign.pilots.map((pilot, pilotIndex) => {
+        const actions = campaign.status == 'preparing' ? [<button key="remove" type="button" onClick={() => removePilot(campaignId, pilot)}>Remove Pilot</button>] : null;
+
+        return <Pilot key={pilotIndex} pilot={pilot} actions={actions} />
       }) : <span>No Pilots</span> }
     </ul>
   );
 }
 
-export function Pilot( {pilot, onClick, actions} ) {
+export function Pilot( {pilot, className, onClick, actions} ) {
   const popover = useRef();
   const popoverAnchor = useRef();
 
   const handleClick = (e) => {
     if (onClick) {
       onClick(e);
+    } else if (actions) {
+      popover.current.togglePopover({source: popoverAnchor.current});
     }
-    popover.current.togglePopover({source: popoverAnchor.current});
   }
 
   let abilities = [];
 
-  for (let name of pilot.abilities) {
-    let ability = getPilotAbility(name);
-    abilities.push(
-      <Fragment key={ability.name}>
-        <button className="link" type="button" popoverTarget={ability.name + "-popover"} popoverTargetAction="toggle">{ability.name}</button>
-        <div popover="auto" id={ability.name+"-popover"}>
-          <h4>{ability.name}</h4>
-          <div className="type">{ability.type}<span>{ability.restrictions}</span></div>
-          <p>
-            <em>{ability.condition}:</em> {ability.description}
-          </p>
-        </div>
-      </Fragment>);
+  if (pilot.abilities?.length > 0) {
+    for (let name of pilot.abilities) {
+      let ability = getPilotAbility(name);
+      abilities.push(
+        <Fragment key={ability.name}>
+          <button className="link" type="button" popoverTarget={ability.name + "-popover"} popoverTargetAction="toggle">{ability.name}</button>
+          <div popover="auto" id={ability.name+"-popover"}>
+            <h4>{ability.name}</h4>
+            <div className="type">{ability.type}<span>{ability.restrictions}</span></div>
+            <p>
+              <em>{ability.condition}:</em> {ability.description}
+            </p>
+          </div>
+        </Fragment>);
+    }
+  }
+
+  const classes = className ? className?.split(' ') : [];
+  classes.push('pilot');
+  if (onClick) {
+    classes.push('clickable');
   }
 
   return (
-    <div key={pilot.id} className="pilot" onClick={actions ? (e) => handleClick(e) : null} ref={popoverAnchor}>
+    <div key={pilot.id} className={classes.join(' ')} onClick={actions || onClick ? (e) => handleClick(e) : null} ref={popoverAnchor}>
       <div className="row">
         <div className="portrait">
           <img src={pilot.pic ? pilot.pic : '/pilots/001.png'}></img>
@@ -75,7 +86,7 @@ export function Pilot( {pilot, onClick, actions} ) {
           <div className="row">
             <StatBox label="Skill">{pilot.skill}</StatBox>
             <StatBox label="Tokens"><img src="/token.png" />{pilot.edgeTokens}</StatBox>
-            <StatBox label="Abilities">{pilot.abilities.length}</StatBox>
+            <StatBox label="Abilities">{pilot.abilities?.length}</StatBox>
           </div>
         </div>
       </div>
@@ -88,13 +99,47 @@ export function Pilot( {pilot, onClick, actions} ) {
         {abilities}
       </div>
       
-    {actions?.length > 0 ? 
+    {actions ? 
       <div className="actions" id={pilot.id + "-actions"} popover="auto" ref={popover}>
-        {actions.map((action, index) => {
-          // Create the actions
-          return <button key={index} type="button" onClick={() => action.cb(pilot)}>{action.name}</button>
-        })}
+        {actions}
       </div> : null }
+    </div>
+  );
+}
+
+export function PilotMini({pilot, className}) {
+
+  let abilities = [];
+  if (pilot.forceCommander && !pilot.abilities.includes('forcecommander')) {
+    pilot.abilities.push('forcecommander');
+  }
+  if (pilot.abilities?.length > 0) {
+    for (let name of pilot.abilities) {
+      let ability = getPilotAbility(name);
+      abilities.push(
+        <Fragment key={ability.name}>
+          <button className="link" type="button" popoverTarget={ability.name + "-popover"} popoverTargetAction="toggle">{ability.name}</button>
+          <div popover="auto" id={ability.name+"-popover"}>
+            <h4>{ability.name}</h4>
+            <div className="type">{ability.type}<span>{ability.restrictions}</span></div>
+            <p>
+              <em>{ability.condition}:</em> {ability.description}
+            </p>
+          </div>
+        </Fragment>);
+    }
+  }
+
+  const classes = className ? className?.split(' ') : [];
+  classes.push('mini-pilot row');
+
+  return (
+    <div key={pilot.id} className={classes.join(' ')}>
+      <StatPair label={<img src={pilot.pic ? pilot.pic : '/pilots/001.png'} />} values={pilot.callsign} />
+      <StatPair label="Skill" values={pilot.skill} />
+      { pilot.edgeTokens ? <StatPair label={<img src="/token.png" />} values={pilot.edgeTokens} /> : null }
+      { pilot.behavior ? <StatPair label="Behavior" values={pilot.behavior} /> : null }
+      { abilities.length > 0 ? <div className="abilities">{abilities}</div> : null }
     </div>
   );
 }

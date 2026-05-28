@@ -79,7 +79,7 @@ export async function removeUnit(campaignId, unit) {
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
-    // Load the campaign so we can apply the unit's cost
+  // Load the campaign so we can apply the unit's cost
   const campaign = await getCampaignById(db, campaignId, currentUser?.uid);
   const campaignUpdate = {};
   if (campaign.status == 'preparing') {
