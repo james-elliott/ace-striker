@@ -3,7 +3,7 @@ import { getFirestore } from "firebase/firestore";
 import { getSortieById } from "@/src/components/sorties/actions";
 import Panel from "@/src/components/ui/panel/panel";
 import Link from "next/link";
-import { OpForUnitList, SortiePlayerUnitList } from "@/src/components/sorties/sorties";
+import { OpForUnitList, SortiePlayerUnitList, SortieStartButton } from "@/src/components/sorties/sorties";
 import { getCampaignById } from "@/src/components/campaign/actions";
 
 export default async function Page(props) {
@@ -20,7 +20,7 @@ export default async function Page(props) {
   return (
     <main>
       <div className="title">
-        <h1>{sortie.name}</h1>
+        <h1 className="row">{sortie.name} {sortie.status == 'not started' ? <SortieStartButton campaignId={params.id} campaign={campaign} sortieId={params.sortieId} sortie={sortie} /> : null }</h1>
         <Link href={`/campaign/${params.id}/`}>Back to sortie list</Link>
       </div>
       <div className="row">

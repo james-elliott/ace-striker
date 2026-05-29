@@ -10,8 +10,6 @@ import { setCookie, deleteCookie } from "cookies-next";
 import { getCampaignSnapshotById, getCampaignsSnapshot } from "../../campaign/campaign";
 import './header.css';
 import { useParams } from "next/navigation";
-import { getCampaignById } from "../../campaign/actions";
-import { db } from "@/src/lib/firebase/clientApp";
 import { getSortieSnapshotById } from "../../sorties/sorties";
 
 function useUserSession(initialUser) {
@@ -40,7 +38,6 @@ export default function Header({ initialUser, initialCampaigns }) {
   const [sortie, setSortie] = useState();
   const campaignMenu = useRef();
   const params = useParams();
-  console.log(params);
 
   useEffect(() => {
     return getCampaignsSnapshot((data) => {
@@ -67,16 +64,9 @@ export default function Header({ initialUser, initialCampaigns }) {
     signOut();
   };
 
-  const handleSignIn = (event) => {
-    event.preventDefault();
-    signInWithGoogle();
-  };
-
   const hideMenus = () => {
     campaignMenu.current.hidePopover();
   }
-
-  console.log(sortie);
 
   return (
     <header>
@@ -114,19 +104,20 @@ export default function Header({ initialUser, initialCampaigns }) {
         </button>
         <ul id="user-menu" popover="auto">
           <li>
-            {user ? (
-              <a href="#" onClick={handleSignOut}>
-                Sign Out
-              </a>
-            ) : (
-              <a href="#" onClick={handleSignIn}>
-                Sign In with Google
-              </a>
-            )}
+            {user ? <a href="#" onClick={handleSignOut}>Sign Out</a> : <SignInWithGoogleLink />}
           </li>
         </ul>
       </div>
 
     </header>
   );
+}
+
+export function SignInWithGoogleLink() {
+  const handleSignIn = (event) => {
+    event.preventDefault();
+    signInWithGoogle();
+  };
+  
+  return <a href="#" onClick={handleSignIn}>Sign In with Google</a>
 }

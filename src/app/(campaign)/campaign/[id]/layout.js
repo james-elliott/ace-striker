@@ -13,12 +13,14 @@ export default async function Layout({ children, params, modals }) {
   const props = await params;
   const campaignId = props.id;
   const { firebaseServerApp, currentUser } = await getAuthenticatedAppForUser();
+  if (!currentUser) {
+    redirect('/');
+  }
   const campaign = await getCampaignById(
     getFirestore(firebaseServerApp),
     campaignId,
     currentUser?.uid
   );
-
   if (!campaign) {
     redirect('/');
   }
