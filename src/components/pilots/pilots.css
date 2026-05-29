@@ -68,14 +68,14 @@ div.mini-pilot {
     max-height: 1.5rem;
     margin-right: .125rem;
   }
-  .stat {
+  .stat:has(img) {
     display: flex;
     flex-direction: row;
     align-items: center;
   }
-  justify-content: start;
-  gap: 2rem;
-  margin-top: .5rem;
+  &.row {
+    justify-content: space-between;
+  }
 }
 
 /* Pilot add/edit form styling */

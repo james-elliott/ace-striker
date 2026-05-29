@@ -297,7 +297,7 @@ export function AddSortieForm( props ) {
   );
 }
 
-export function AddPlayerUnitsToSortieForm( {campaignId, sortieId, forceUnits}) {
+export function SelectPlayerUnitsForSortieForm( {campaignId, sortieId, forceUnits}) {
   const router = useRouter();
   const units = forceUnits.filter((unit) => unit.sorties ? !Object.hasOwn(unit.sorties, sortieId) : true);
   const [selectedUnitIDs, setSelectedUnitIDs] = useState([]);
@@ -327,7 +327,7 @@ export function AddPlayerUnitsToSortieForm( {campaignId, sortieId, forceUnits}) 
 
   return (
     <form action={handleSubmit}>
-      <Panel title="Add Units to Sortie">
+      <Panel title="Select Units For Sortie">
         <div className="units">
           {units?.length > 0 ? units.map((unit, unitIndex) => {
             return <Unit key={unitIndex} 
@@ -343,7 +343,7 @@ export function AddPlayerUnitsToSortieForm( {campaignId, sortieId, forceUnits}) 
           type="submit" 
           value="confirm"
         >
-          Add Units
+          Select Units
         </button>
         <button
           type="reset"

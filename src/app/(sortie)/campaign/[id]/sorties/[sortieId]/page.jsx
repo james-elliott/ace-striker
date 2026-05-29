@@ -25,7 +25,7 @@ export default async function Page(props) {
       </div>
       <div className="row">
         <Panel title="Player Force"
-          action={true ? <Link href={`${params.sortieId}/selectUnits`}>Add Units</Link> : <button type="button" disabled={true} title="Player Force is at PV maximum">Select Units</button>} 
+          action={true ? <Link href={`${params.sortieId}/selectUnits`}>Select Units</Link> : <button type="button" disabled={true} title="Player Force is at PV maximum">Select Units</button>} 
           style={{'--primary-color' : '#636466', flexGrow: 1}}>
             <SortiePlayerUnitList forceUnits={campaign.units} sortieId={params.sortieId} />
           </Panel>

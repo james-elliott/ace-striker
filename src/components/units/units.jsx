@@ -610,5 +610,8 @@ export function AddUnitForm( {campaignId, initialCampaign} ) {
       </menu>
     </form>
   </>
+}
+
+export function ChangeVariantForm( {campaignId, unit} ) {
 
 }
