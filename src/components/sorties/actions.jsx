@@ -161,17 +161,17 @@ export async function editOpForUnit(campaignId, sortieId, unitId, pilot) {
   }
 }
 
-export async function removeUnitFromOpFor(campaignId, sortieId, unitId) {
+export async function removeUnitFromOpFor(campaignId, sortieId, unitId, round = 0) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
   const sortie = await getSortieById(db, campaignId, sortieId);
 
-  let newOpFor = sortie.opfor.filter(unit => unit.id !== unitId);
+  sortie.round[round].opfor = sortie.round[round].opfor.filter(unit => unit.id !== unitId);
 
   try {
     const docRef = doc(db, 'campaigns', campaignId, 'sorties', sortieId);
-    await setDoc(docRef, {opfor: newOpFor}, { merge: true });
+    await setDoc(docRef, { round: sortie.round }, { merge: true });
   } catch (e) {
     console.log("There was an error removing unit from OpFor");
     console.error("Error adding document: ", e);
@@ -216,4 +216,22 @@ export async function getSortieById(db, campaignId, sortieId) {
   } else {
     return;
   }
+}
+
+export async function startSortie(campaignId, sortieId) {
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const db = getFirestore(firebaseServerApp);
+
+  const campaign = await getCampaignById(db, campaignId);
+  const sortie = await getSortieById(db, campaignId, sortieId);
+
+  console.log('campaign', campaign);
+  console.log('sortie', sortie);
+  console.log(sortie.round[0]);
+  // Copy the selected player force to sortie round 0
+  // Use a single iteration loop, so we can also set the current values for mutable stats
+  // Give each unit without a pilot a fake pilot with skill 4 and 0 edgeTokens
+
+  // Check to see if the campaign is started
+  // If not, start it. Checking here to not redundantly start it will save on db writes.
 }

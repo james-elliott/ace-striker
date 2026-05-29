@@ -1,6 +1,6 @@
 "use client";
 
-import { addSortie, addOpForUnit, removeUnitFromOpFor, addPlayerUnitsToSortie, removePlayerUnitFromSortie, editOpForUnit, assignPilotToPlayerUnit } from "./actions";
+import { addSortie, addOpForUnit, removeUnitFromOpFor, addPlayerUnitsToSortie, removePlayerUnitFromSortie, editOpForUnit, assignPilotToPlayerUnit, startSortie } from "./actions";
 import { useRouter, useParams } from "next/navigation";
 import Panel from "../ui/panel/panel";
 import { useForm } from "react-hook-form";
@@ -342,6 +342,7 @@ export function SelectPlayerUnitsForSortieForm( {campaignId, sortieId, forceUnit
         <button 
           type="submit" 
           value="confirm"
+          disabled={selectedUnitIDs.length < 1}
         >
           Select Units
         </button>
@@ -875,4 +876,30 @@ export function AssignPlayerPilotForm( {campaignId, sortieId, unit, forcePilots}
       </menu>
     </form>
   )
+}
+
+export function SortieStartButton({campaignId, campaign, sortieId, sortie}) {
+  const [playerUnits, setPlayerUnits] = useState(unitsInSortie(campaign.units, sortieId));
+  const [opForUnits, setOpForUnits] = useState(sortie.round[0].opfor);
+
+  useEffect(() => {
+    return getCampaignSnapshotById((data) => {
+      setPlayerUnits(unitsInSortie(data.units, sortieId));
+    }, campaignId);
+  },[]);
+
+  useEffect(() => {
+    return getSortieSnapshotById((data) => {
+      setOpForUnits(data.round[0].opfor);
+    }, campaignId, sortieId);
+  },[]);
+
+  return (
+    <button
+      className="button"
+      type="button"
+      disabled={playerUnits.length < 1 || opForUnits.length < 1}
+      onClick={() => startSortie(campaignId, sortieId)}
+    >Start Sortie</button>
+  );
 }
