@@ -202,8 +202,8 @@ export function SortiePlayerUnitList( {forceUnits, sortieId} ) {
   );
 }
 
-export function OpForUnitList( {initialSortie} ) {
-  const [units, setUnits] = useState(initialSortie.opfor);
+export function OpForUnitList( {initialSortie, round} ) {
+  const [units, setUnits] = useState(initialSortie?.round[round].opfor);
   const params = useParams();
 
   const removeOpForUnit = async(unit) => {
@@ -212,7 +212,7 @@ export function OpForUnitList( {initialSortie} ) {
 
   useEffect(() => {
     return getSortieSnapshotById((data) => {
-      setUnits(data.opfor);
+      setUnits(data.round[round].opfor);
     }, params.id, params.sortieId);
   },[]);
 
@@ -370,13 +370,14 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
   const [type, setType] = useState([18, 19, 21]);
   const [factions, setFactions] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState();
+  const [pilot, setPilot] = useState({skill: 4});
   const autofocus = useRef();
 
   let lastSearchId = null;
 
   const handleSubmit = (unit) => {
     if (unit) {
-      addOpForUnit(campaignId, sortieId, unit);
+      addOpForUnit(campaignId, sortieId, unit, pilot);
       router.back();
     }
   }
@@ -387,6 +388,7 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
       return;
     }
     if (selectedUnit !== unit) {
+      setPilot({skill: pilot.skill, behavior: unit.Role.Name})
       setSelectedUnit(unit);
     } else {
       setSelectedUnit();
@@ -458,6 +460,31 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
       }
     }
     return rendered;
+  }
+
+  const updatePilot = (event, attr) => {
+    let newPilot = {...pilot};
+    newPilot[attr] = event.currentTarget.value;
+    setPilot(newPilot);
+  }
+
+  const skillOptions = [];
+  for (let i = 0; i < 9; i++) {
+    skillOptions.push(<option key={i} value={i}>{i}</option>);
+  }
+
+  const getBehaviorOptions = () => {
+    const behaviorOptions = [];
+    if (selectedUnit && selectedUnit.Type.Id == 17) {
+      getMULAerospaceRoles().map((role, index) => {
+        behaviorOptions.push(<option key={index} value={role}>{role}</option>)
+      });
+    } else {
+      getMULGroundRoles().map((role, index) => {
+        behaviorOptions.push(<option key={index} value={role}>{role}</option>)
+      });
+    }
+    return behaviorOptions;
   }
 
   const updateFactions = (newFactions) => {
@@ -636,9 +663,7 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
         </div></div>
         </details>
 
-      <h3 className="text-center">
-        Search Results ({isSearching ? '...' : searchResults.length})
-      </h3>
+      <h3>Search Results ({isSearching ? '...' : searchResults.length})</h3>
 
       <div className="table-wrapper">
         <table className="table">
@@ -655,22 +680,44 @@ export function AddOpForToSortieForm( {campaignId, sortieId} ) {
           </thead>
         </table>
 
-          {searchResults.length > 0 ? (
-            <div className="units column">
-              {searchResults.map( (asUnit, unitIndex) => {
-                let unit = convertUnit(asUnit);
-                return (
-                  <Unit unit={unit} key={unitIndex} 
-                    className={selectedUnit == asUnit ? 'active' : null } 
-                    onClick={(e) => handleSelection(e, asUnit)}
-                    wide={true}
-                    />
-                )
-              })}
-            </div>
-          ) : null }
+        {searchResults.length > 0 ? (
+          <div className="units column">
+            {searchResults.map( (asUnit, unitIndex) => {
+              let unit = convertUnit(asUnit);
+              return (
+                <Unit unit={unit} key={unitIndex} 
+                  className={selectedUnit == asUnit ? 'active' : null } 
+                  onClick={(e) => handleSelection(e, asUnit)}
+                  wide={true}
+                  />
+              )
+            })}
+          </div>
+        ) : null }
+      </div>
 
-        </div>
+      <h3>Unit Pilot</h3>
+      <div className="row">
+        <label>Pilot Skill
+          <select
+            value={pilot.skill}
+            onChange={(e) => updatePilot(e, 'skill')}
+            disabled={!selectedUnit}
+            >
+            {skillOptions}
+          </select>
+        </label>
+        <label>Behavior
+          <select
+            value={pilot.behavior ? pilot.behavior : selectedUnit?.Role?.Name}
+            onChange={(e) => updatePilot(e, 'behavior')}
+            disabled={!selectedUnit}
+            >
+            {getBehaviorOptions()}
+          </select>
+        </label>
+      </div>
+
     </Panel>
       <menu className="actions">
         <button 
@@ -769,15 +816,15 @@ export function AssignPlayerPilotForm( {campaignId, sortieId, unit, forcePilots}
   const [selectedPilot, setSelectedPilot] = useState(unit.sorties[sortieId].pilot);
   const [forceCommander, setForceCommander] = useState(selectedPilot?.forceCommander);
   
-  const handleSelection = (e, pilot) => {
-    if (e.target.tagName == "BUTTON") {
+  const handleSelection = (event, pilot) => {
+    if (event.target.tagName == "BUTTON") {
       console.log('aborting because it\'s a button');
       return;
     }
     setSelectedPilot(pilot);
   }
 
-  const toggleForceCommander = (e) => {
+  const toggleForceCommander = (event) => {
     setForceCommander(event.target.value);
   }
 

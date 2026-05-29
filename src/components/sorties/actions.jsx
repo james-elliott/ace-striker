@@ -104,29 +104,34 @@ export async function assignPilotToPlayerUnit(campaignId, sortieId, unitId, pilo
   }
 }
 
-export async function addOpForUnit(campaignId, sortieId, unitData) {
+export async function addOpForUnit(campaignId, sortieId, unitData, pilotData, round = 0) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
 
   // Create the unit object
   const newUnit = convertUnit(unitData);
   newUnit.id = generateUUID();
-  newUnit.pilot = {
+  newUnit.pilot = pilotData ? pilotData : {
     skill: 4,
     behavior: newUnit.role,
   };
   
   // Add the opfor to the sortie
   const sortie = await getSortieById(db, campaignId, sortieId);
-  if (!sortie.opfor) {
-    sortie.opfor = [newUnit];
+  if (sortie.round && sortie.round[round] && sortie.round[round].opfor) {
+    // Add the unit to the specific round
+    sortie.round[round].opfor.push(newUnit);
+  } else if (sortie.round) {
+    // We have a round array, but no opfor array, create opfor
+    sortie.round[round].opfor = [newUnit];
   } else {
-    sortie.opfor.push(newUnit);
+    // We don't even have a round array, create it and the opfor array
+    sortie.round = [{opfor: [newUnit]}]
   }
 
   try {
     const docRef = doc(db, 'campaigns', campaignId, 'sorties', sortieId);
-    await setDoc(docRef, { opfor: sortie.opfor }, { merge: true });
+    await setDoc(docRef, { round: sortie.round }, { merge: true });
   } catch (e) {
     console.log("There was an error adding unit to OpFor");
     console.error("Error adding document: ", e);

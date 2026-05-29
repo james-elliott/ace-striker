@@ -29,10 +29,10 @@ export default async function Page(props) {
           style={{'--primary-color' : '#636466', flexGrow: 1}}>
             <SortiePlayerUnitList forceUnits={campaign.units} sortieId={params.sortieId} />
           </Panel>
-        <Panel title="OpFor"
+        <Panel title="Initial OpFor"
           action={<Link href={`${params.sortieId}/addOpFor`}>Add OpFor</Link>}
           style={{'--primary-color' : '#B82327', flexGrow: 1}}>
-            <OpForUnitList initialSortie={sortie} />
+            <OpForUnitList initialSortie={sortie} round={0} />
           </Panel>
       </div>
     </main>
