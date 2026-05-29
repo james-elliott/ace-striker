@@ -38,25 +38,6 @@ export async function addCampaign(initiatalState, formData) {
   }
 }
 
-export async function startCampaign(campaign, campaignId) {
-  const { firebaseServerApp } = await getAuthenticatedAppForUser();
-  const db = getFirestore(firebaseServerApp);
-
-  const campaignUpdate = {status: 'started'}
-  if (campaign.currentPV > 0) {
-    campaignUpdate.currentSP = campaign.startingSP + (campaign.currentPV * 40);
-  }
-
-  try {
-    const campaignRef = doc(db, 'campaigns', campaignId);
-    await setDoc(campaignRef, campaignUpdate, { merge: true });
-  } catch (e) {
-    console.log("There was an error starting the campaign");
-    console.error("Error starting campaign: ", e);
-  }
-  redirect('/campaign/' + campaignId);
-}
-
 export async function getCampaigns(db = db, userId) {
   if (userId == null) {
     console.log('Error: No user id provided to getCampaigns');

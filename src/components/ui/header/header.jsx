@@ -10,6 +10,9 @@ import { setCookie, deleteCookie } from "cookies-next";
 import { getCampaignSnapshotById, getCampaignsSnapshot } from "../../campaign/campaign";
 import './header.css';
 import { useParams } from "next/navigation";
+import { getCampaignById } from "../../campaign/actions";
+import { db } from "@/src/lib/firebase/clientApp";
+import { getSortieSnapshotById } from "../../sorties/sorties";
 
 function useUserSession(initialUser) {
   useEffect(() => {
@@ -34,8 +37,10 @@ export default function Header({ initialUser, initialCampaigns }) {
   const user = useUserSession(initialUser);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [campaign, setCampaign] = useState();
+  const [sortie, setSortie] = useState();
   const campaignMenu = useRef();
   const params = useParams();
+  console.log(params);
 
   useEffect(() => {
     return getCampaignsSnapshot((data) => {
@@ -50,6 +55,13 @@ export default function Header({ initialUser, initialCampaigns }) {
     }, params.id);
   },[params.id]);
 
+  useEffect(() => {
+    setSortie();
+    return getSortieSnapshotById((data) => {
+      setSortie(data);
+    }, params.id, params.sortieId);
+  },[params.id, params.sortieId]);
+
   const handleSignOut = (event) => {
     event.preventDefault();
     signOut();
@@ -63,6 +75,8 @@ export default function Header({ initialUser, initialCampaigns }) {
   const hideMenus = () => {
     campaignMenu.current.hidePopover();
   }
+
+  console.log(sortie);
 
   return (
     <header>
@@ -84,11 +98,11 @@ export default function Header({ initialUser, initialCampaigns }) {
         </ul>
       </div>
 
-      { campaign ? <span>{campaign.name}</span> : null }
+      <span>{campaign?.name}</span>
 
       <Link href="/" className="logo">Ace Striker</Link>
 
-      { campaign ? <span>{ campaign.forceName }</span> : null }
+      <span>{sortie?.name}</span>
 
       <div className="menu">
         <button popoverTarget="user-menu" className="material-symbols-outlined">

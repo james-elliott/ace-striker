@@ -11,7 +11,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/src/lib/firebase/clientApp";
-import { addCampaign, startCampaign } from "./actions.js";
+import { addCampaign } from "./actions.js";
 import "./campaign.css";
 import Panel from "../ui/panel/panel.jsx";
 import { SortieTable } from "../sorties/sorties.jsx";
@@ -57,30 +57,6 @@ export function Campaign( {campaignId, initialSorties} ) {
       </div>
     </Panel>
   );
-}
-
-export function CampaignBanner({initialCampaign, campaignId}) {
-  const [campaign, setCampaign] = useState(initialCampaign);
-
-  useEffect(() => {
-    return getCampaignSnapshotById((data) => {
-      setCampaign(data);
-    }, campaignId);
-  },[]);
-
-  
-
-  if (campaign.status == 'preparing') {
-    const disabled = !campaign.pilots || campaign.pilots.length < 2 || !campaign.units || campaign.units.length < 1;
-    return (
-      <div className="row">
-        <h1>Add units and pilots to start the campaign</h1>
-        <button type="button" onClick={() => startCampaign(campaign, campaignId)} disabled={disabled} title={disabled ? "Campaigns need at least 1 unit and 2 pilots to start" : null}>Start Campaign</button>
-      </div>
-    );
-  }
-  
-  return null;
 }
 
 export function CampaignResources( {initialCampaign, campaignId} ) {
