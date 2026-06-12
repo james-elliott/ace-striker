@@ -16,6 +16,7 @@ export async function addSortie(campaignId, formData) {
     name: formData.get("name"),
     date: new Date(),
     status: 'not started',
+    round: [],
   }
 
   // Write to the sortie collection

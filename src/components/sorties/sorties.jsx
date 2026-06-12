@@ -203,7 +203,7 @@ export function SortiePlayerUnitList( {forceUnits, sortieId} ) {
 }
 
 export function OpForUnitList( {initialSortie, round} ) {
-  const [units, setUnits] = useState(initialSortie?.round[round].opfor);
+  const [units, setUnits] = useState(initialSortie.round ? initialSortie.round[round].opfor : []);
   const params = useParams();
 
   const removeOpForUnit = async(unit) => {
@@ -212,7 +212,7 @@ export function OpForUnitList( {initialSortie, round} ) {
 
   useEffect(() => {
     return getSortieSnapshotById((data) => {
-      setUnits(data.round[round].opfor);
+      setUnits(data.round ? data.round[round].opfor : []);
     }, params.id, params.sortieId);
   },[]);
 
@@ -880,7 +880,7 @@ export function AssignPlayerPilotForm( {campaignId, sortieId, unit, forcePilots}
 
 export function SortieStartButton({campaignId, campaign, sortieId, sortie}) {
   const [playerUnits, setPlayerUnits] = useState(unitsInSortie(campaign.units, sortieId));
-  const [opForUnits, setOpForUnits] = useState(sortie.round[0].opfor);
+  const [opForUnits, setOpForUnits] = useState(sortie.round ? sortie.round[0].opfor : []);
 
   useEffect(() => {
     return getCampaignSnapshotById((data) => {
@@ -890,7 +890,7 @@ export function SortieStartButton({campaignId, campaign, sortieId, sortie}) {
 
   useEffect(() => {
     return getSortieSnapshotById((data) => {
-      setOpForUnits(data.round[0].opfor);
+      setOpForUnits(data.round ? data.round[0].opfor : []);
     }, campaignId, sortieId);
   },[]);
 
