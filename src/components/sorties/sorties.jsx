@@ -1,6 +1,6 @@
 "use client";
 
-import { addSortie, addOpForUnit, removeUnitFromOpFor, addPlayerUnitsToSortie, removePlayerUnitFromSortie, editOpForUnit, assignPilotToPlayerUnit, startSortie } from "./actions";
+import { addSortie, addOpForUnit, removeUnitFromOpFor, addPlayerUnitsToSortie, removePlayerUnitFromSortie, editOpForUnit, assignPilotToPlayerUnit, startSortie, togglePlayerUnitInReserve } from "./actions";
 import { useRouter, useParams } from "next/navigation";
 import Panel from "../ui/panel/panel";
 import { useForm } from "react-hook-form";
@@ -178,6 +178,10 @@ export function SortiePlayerUnitList( {forceUnits, sortieId} ) {
     removePlayerUnitFromSortie(params.id, sortieId, unit.id);
   }
 
+  const toggleUnitInReserve = async(unit) => {
+    togglePlayerUnitInReserve(params.id, sortieId, unit.id);
+  }
+
   useEffect(() => {
     return getCampaignSnapshotById((data) => {
       setUnits(unitsInSortie(data.units, sortieId));
@@ -189,11 +193,13 @@ export function SortiePlayerUnitList( {forceUnits, sortieId} ) {
       { units?.length > 0 ? units.map((unit, unitIndex) => {
         const actions = [
           <Link key="assign" href={`/campaign/${params.id}/sorties/${sortieId}/assignPilot/${unit.id}`} className="button">Assign Pilot</Link>,
+          // <button key="reserve" type="button" onClick={() => toggleUnitInReserve(unit)}>{unit.inReserve ? "Deploy Immediately" : "Hold in Reserve"}</button>,
           <button key="remove" type="button" onClick={() => removePlayerUnit(unit)}>Remove</button>,
         ];
 
         return <Unit key={unitIndex} 
           unit={unit} 
+          className={unit.inReserve ? 'reserve' : ''}
           actions={actions}
           pilot={Object.hasOwn(unit.sorties[sortieId], 'id') ? unit.sorties[sortieId] : null}
           />

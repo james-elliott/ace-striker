@@ -105,6 +105,35 @@ export async function assignPilotToPlayerUnit(campaignId, sortieId, unitId, pilo
   }
 }
 
+export async function togglePlayerUnitInReserve(campaignId, sortieId, unitId) {
+  const { firebaseServerApp } = await getAuthenticatedAppForUser();
+  const db = getFirestore(firebaseServerApp);
+
+  const campaign = await getCampaignById(db, campaignId);
+  const forceUnits = campaign.units;
+
+  forceUnits.map((unit, index) => {
+    if (unit.sorties && unit.sorties[sortieId]) {
+
+      if (unit.id == unitId) {
+        if (unit.inReserve) {
+          unit.inReserve = false;
+        } else {
+          unit.inReserve = true;
+        }
+      }
+    }
+  });
+
+  try {
+    const docRef = doc(db, 'campaigns', campaignId);
+    await setDoc(docRef, { units: forceUnits }, { merge: true });
+  } catch (e) {
+    console.log("There was an error moving this unit to or from reserves for this sortie.");
+    console.error("Error adding document: ", e);
+  }
+}
+
 export async function addOpForUnit(campaignId, sortieId, unitData, pilotData, round = 0) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
   const db = getFirestore(firebaseServerApp);
@@ -226,13 +255,50 @@ export async function startSortie(campaignId, sortieId) {
   const campaign = await getCampaignById(db, campaignId);
   const sortie = await getSortieById(db, campaignId, sortieId);
 
-  console.log('campaign', campaign);
-  console.log('sortie', sortie);
-  console.log(sortie.round[0]);
   // Copy the selected player force to sortie round 0
-  // Use a single iteration loop, so we can also set the current values for mutable stats
-  // Give each unit without a pilot a fake pilot with skill 4 and 0 edgeTokens
+  sortie.round[0].units = [];
+  campaign.units.map((unit, index) => {
+    if (unit.sorties && unit.sorties[sortieId]) {
+      // Add pilot skill and tokens to units without named pilots
+      if (!Object.hasOwn(unit.sorties[sortieId], 'id')) {
+        unit.sorties[sortieId] = {skill: 4, edgeTokens: 0}
+      }
+      // Calculate the temp stats for the unit
+      unit.damageTaken = 0;
+      // No crits for BA or CI
+      if (!["BA", "CI"].includes(unit.type)) {
+        // All units with crits can get FCS and Weapon crits
+        unit.fcsCrit = 0;
+        unit.weaponCrit = 0;
 
-  // Check to see if the campaign is started
+        if (unit.type == "PM") {
+          unit.mvCrit = 0;
+        } else if(["BM", "IM"].includes(unit.type)) {
+          // Mechs can have movement crits and heat
+          unit.engineCrit = 0;
+          unit.mvCrit = 0;
+          unit.heat = 0;
+        } else if(["CV", "SV"].includes(unit.type)) {
+          // Vehicles have motive crits
+          unit.engineCrit = 0;
+          unit.motive1Crit = 0;
+          unit.motive2Crit = 0;
+          unit.motive3Crit = 0;
+        }
+      }
+
+      sortie.round[0].units.push(unit);
+    }
+  });
+
+  sortie.status = "started";
+
+  
+  // console.log('campaign', campaign);
+  console.log(sortie.round[0]);
+
+  // Save the sortie
+
+  // Check to see if the campaign is started and save if necessary
   // If not, start it. Checking here to not redundantly start it will save on db writes.
 }
