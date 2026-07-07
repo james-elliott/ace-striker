@@ -15,6 +15,15 @@ export default async function Page(props) {
   const sortie = await getSortieById(db, params.id, params.sortieId);
 
   // If the sortie is started, render the play screen
+  if (sortie.status == 'started') {
+    return (
+      <main>
+        Sortie nav goes here
+        <br />
+        Sortie play stuff goes here
+      </main>
+    )
+  }
 
   // If the sortie isn't started, render force selection
   return (
